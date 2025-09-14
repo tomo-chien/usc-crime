@@ -430,7 +430,6 @@
       "Party Shut Down": 'in:(Final Incident) "Party/Event Shut Down"',
       "Frat Row Noise": 'in:(Location) "900 Block Of 28TH ST" or "800 Block Of 28TH ST" or "700 Block Of 28TH ST" or "600 Block Of 28TH ST" and in:(Final Incident) "Loud and Raucous Noise"'
     };
-
     function buildDashboardChart(start, end) {
       const campusChecked = document.getElementById("dashboardOnCampus").checked;
       const filtered = logsData.filter(d => {
@@ -448,62 +447,72 @@
       }
 
       const options = {
-        chart: { type: 'bar', height: 400, toolbar: { show: false }, events: {
-          dataPointSelection: function(event, chartContext, config) {
-            const category = options.xaxis.categories[config.dataPointIndex];
-            const query = categoryQueries[category];
-            const fromDate = document.getElementById("chartStartDate").value;
-            const toDate = document.getElementById("chartEndDate").value;
-            let dateFilter = "";
-            if (fromDate && toDate) {
-              const startStr = formatPacificDate(fromDate);
-              const endStr = formatPacificDate(toDate);
-              dateFilter = `from:${startStr} to ${endStr} and `;
+        chart: { 
+          type: 'bar', 
+          height: 400, 
+          toolbar: { show: false }, 
+          events: {
+            dataPointSelection: function(event, chartContext, config) {
+              const category = options.xaxis.categories[config.dataPointIndex];
+              const query = categoryQueries[category];
+              const fromDate = document.getElementById("chartStartDate").value;
+              const toDate = document.getElementById("chartEndDate").value;
+              let dateFilter = "";
+              if (fromDate && toDate) {
+                const startStr = formatPacificDate(fromDate);
+                const endStr = formatPacificDate(toDate);
+                dateFilter = `from:(${startStr} to ${endStr}) and `;
+              }
+              let campusFilter = "";
+              if (document.getElementById("dashboardOnCampus").checked) {
+                campusFilter = 'and in:(Location) "on campus"';
+                document.getElementById("logsOnCampus").checked = true;
+              } else {
+                document.getElementById("logsOnCampus").checked = false;
+              }
+              const fullQuery = `${dateFilter}${query} ${campusFilter}`.trim();
+              document.querySelector('[data-tab="allLogs"]').click();
+              const searchBox = document.getElementById("searchAll");
+              searchBox.value = fullQuery;
+              searchBox.dispatchEvent(new Event("input"));
             }
-            let campusFilter = "";
-            if (document.getElementById("dashboardOnCampus").checked) {
-              campusFilter = 'and in:(Location) "on campus"';
-              document.getElementById("logsOnCampus").checked = true;
-            } else {
-              document.getElementById("logsOnCampus").checked = false;
-            }
-            const fullQuery = `${dateFilter}${query} ${campusFilter}`.trim();
-            document.querySelector('[data-tab="allLogs"]').click();
-            const searchBox = document.getElementById("searchAll");
-            searchBox.value = fullQuery;
-            searchBox.dispatchEvent(new Event("input"));
           }
-        }},
+        },
         plotOptions: { bar: { borderRadius: 3, columnWidth: '55%' } },
+        states: {
+          active: { filter: { type: 'none' } } // 👈 removes sticky "selected" darker state
+        },
         dataLabels: { enabled: false },
-        xaxis: { categories: seriesData.map(d => d.label), labels: { rotate: -30, style: { fontSize: '12px' } } },
+        xaxis: { 
+          categories: seriesData.map(d => d.label), 
+          labels: { rotate: -30, style: { fontSize: '12px' } } 
+        },
         colors: ["#ac2124"],
         series: [{ name: "Incidents", data: seriesData.map(d => d.count) }]
       };
+
       const chartDiv = document.querySelector("#categoryChart");
       chartDiv.innerHTML = "";
       new ApexCharts(chartDiv, options).render();
     }
 
-    ["chartStartDate","chartEndDate","dashboardOnCampus"].forEach(id => {
-      document.getElementById(id).addEventListener("change", () => {
-        const start = parsePacificDate(document.getElementById("chartStartDate").value);
-        const end = parsePacificDate(document.getElementById("chartEndDate").value);
-        if (start && end) buildDashboardChart(start, end);
-      });
-    });
 
-    // -----------------------------
-    // Query Parsing / Evaluation
-    // -----------------------------
+   // -----------------------------
+  // Query Parsing / Evaluation
+  // -----------------------------
     function parseQuery(query) {
-      return query.match(/from:\d{1,2}\/\d{1,2}\/\d{4}\s+to\s+\d{1,2}\/\d{1,2}\/\d{4}|after:\d{1,2}\/\d{1,2}\/\d{4}|before:\d{1,2}\/\d{1,2}\/\d{4}|in:\([^)]+\)\s+"[^"]+"|in:\([^)]+\)\s+[^\s]+|"(.*?)"|and|or|[^\s]+/gi) || [];
+      return query.match(
+        /from:\([^)]*\)|after:\d{1,2}\/\d{1,2}\/\d{4}|before:\d{1,2}\/\d{1,2}\/\d{4}|in:\([^)]+\)\s+"[^"]+"|in:\([^)]+\)\s+[^\s]+|"(.*?)"|and|or|[^\s]+/gi
+      ) || [];
     }
 
     function evaluateRow(row, tokens) {
       let result = null;
       let currentOp = "AND";
       let lastColumn = null;
+
+      // Track date validity separately
+      let dateValid = true;
 
       for (let t of tokens) {
         const token = t.toLowerCase();
@@ -512,26 +521,31 @@
 
         let condition = false;
 
-        if (token.startsWith("from:")) {
-          const m = token.match(/from:(\d{1,2}\/\d{1,2}\/\d{4})\s+to\s+(\d{1,2}\/\d{1,2}\/\d{4})/);
+        if (token.startsWith("from:(")) {
+          const m = token.match(/from:\((\d{1,2}\/\d{1,2}\/\d{4})\s+to\s+(\d{1,2}\/\d{1,2}\/\d{4})\)/i);
           if (m) {
             const start = new Date(m[1]);
             const end = new Date(m[2]);
             const dt = parseReportedDate(row["Date Reported"]);
-            condition = dt >= start && dt <= end;
+            dateValid = dt >= start && dt <= end;
           }
-        } else if (token.startsWith("after:")) {
+          continue; // don’t mix into OR/AND logic
+        }
+        else if (token.startsWith("after:")) {
           const m = token.match(/after:(\d{1,2}\/\d{1,2}\/\d{4})/);
           if (m) {
             const dt = parseReportedDate(row["Date Reported"]);
-            condition = dt > new Date(m[1]);
+            dateValid = dt > new Date(m[1]);
           }
-        } else if (token.startsWith("before:")) {
+          continue;
+        }
+        else if (token.startsWith("before:")) {
           const m = token.match(/before:(\d{1,2}\/\d{1,2}\/\d{4})/);
           if (m) {
             const dt = parseReportedDate(row["Date Reported"]);
-            condition = dt < new Date(m[1]);
+            dateValid = dt < new Date(m[1]);
           }
+          continue;
         }
         else if (token.startsWith("in:(")) {
           const m = token.match(/in:\(([^)]+)\)\s*(.+)/);
@@ -553,8 +567,11 @@
         else if (currentOp === "OR") result = result || condition;
       }
 
-      return result === null ? false : result;
+      // Enforce date filter separately
+      return dateValid && (result === null ? true : result);
     }
+
+
 
     function matchValue(cell, valString) {
       const cellVal = (cell || "").toLowerCase();
