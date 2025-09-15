@@ -150,71 +150,68 @@
   <div id="resources" class="tab-content">
 
     <h3 style="margin-top:20px;">Email Alerts Signup</h3>
-      <form id="emailForm" style="margin-top:10px;">
-        <input 
-          type="email" 
-          id="emailInput" 
-          placeholder="Enter your email" 
-          required 
-          style="padding:8px; margin-bottom:10px; border:1px solid #ccc; border-radius:4px; width:250px;"
-        ><br>
+    <form id="emailForm" style="margin-top:10px;">
+      <input 
+        type="email" 
+        id="emailInput" 
+        placeholder="Enter your email" 
+        required 
+        style="padding:8px; margin-bottom:10px; border:1px solid #ccc; border-radius:4px; width:250px;"
+      ><br>
 
-        <label><input type="checkbox" id="daily"> Daily report</label><br>
-        <label><input type="checkbox" id="weekly"> Weekly report</label><br>
-        <label><input type="checkbox" id="frat"> Weekly report (frat row)</label><br><br>
+      <label><input type="checkbox" id="daily"> Daily report</label><br>
+      <label><input type="checkbox" id="weekly"> Weekly report</label><br>
+      <label><input type="checkbox" id="frat"> Weekly report (frat row)</label><br><br>
 
-        <button 
-          type="submit" 
-          style="padding:8px 16px; background:#ac2124; color:#fff; border:none; border-radius:4px; cursor:pointer;"
-        >
-          Subscribe
-        </button>
-      </form>
+      <button 
+        type="submit" 
+        style="padding:8px 16px; background:#ac2124; color:#fff; border:none; border-radius:4px; cursor:pointer;"
+      >
+        Subscribe
+      </button>
+    </form>
+
 
 
     <script>
 
-     // ================================
-    // Email Alerts Form Submission
-    // ================================
-    document.addEventListener("DOMContentLoaded", function() {
-      const form = document.getElementById("emailForm");
-      if (!form) return;
+      // ================================
+      // Email Alerts Form Submission (GET approach)
+      // ================================
+      document.addEventListener("DOMContentLoaded", function() {
+        const form = document.getElementById("emailForm");
+        if (!form) return;
 
-      form.addEventListener("submit", function(e) {
-        e.preventDefault();   // stop form from reloading
-        e.stopPropagation();  // extra safety
+        form.addEventListener("submit", function(e) {
+          e.preventDefault();
+          e.stopPropagation();
 
-        const userEmail = document.getElementById("emailInput").value;
-        const dailyChecked = document.getElementById("daily").checked;
-        const weeklyChecked = document.getElementById("weekly").checked;
-        const fratChecked = document.getElementById("frat").checked;
+          const userEmail = document.getElementById("emailInput").value;
+          const dailyChecked = document.getElementById("daily").checked;
+          const weeklyChecked = document.getElementById("weekly").checked;
+          const fratChecked = document.getElementById("frat").checked;
 
-        fetch("https://script.google.com/macros/s/AKfycbwAkY-tMnqOl6sFfUa4V8hTs_sW0OI1ciDKhXLIH4pzCJlEh7BZ9eLKFqEcpPVE3kiGCg/exec", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            email: userEmail,
-            daily: dailyChecked,
-            weekly: weeklyChecked,
-            fratrow: fratChecked
-          })
-        })
-        .then(res => res.json())
-        .then(data => {
-          if (data.status === "success") {
-            alert("✅ Signed up successfully!");
-            form.reset();
-          } else {
-            alert("⚠️ Error: " + data.message);
-          }
-        })
-        .catch(err => {
-          alert("⚠️ Network error: " + err);
+          const url = "https://script.google.com/macros/s/AKfycbwAkY-tMnqOl6sFfUa4V8hTs_sW0OI1ciDKhXLIH4pzCJlEh7BZ9eLKFqEcpPVE3kiGCg/exec" +
+            "?email=" + encodeURIComponent(userEmail) +
+            "&daily=" + dailyChecked +
+            "&weekly=" + weeklyChecked +
+            "&fratrow=" + fratChecked;
+
+          fetch(url)
+            .then(res => res.json())
+            .then(data => {
+              if (data.status === "success") {
+                alert("✅ Signed up successfully!");
+                form.reset();
+              } else {
+                alert("⚠️ Error: " + data.message);
+              }
+            })
+            .catch(err => {
+              alert("⚠️ Network error: " + err);
+            });
         });
       });
-    });
-
 
     </script>
 
