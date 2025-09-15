@@ -312,52 +312,55 @@
       const response = await fetch("usc_crime_logs.json");
       logsData = await response.json();
 
-      // Normalize whitespace but keep keys EXACTLY the same
+      // Normalize whitespace
       logsData = logsData.map(d => {
         const cleaned = {};
         for (const key in d) {
-          if (typeof d[key] === "string") {
-            cleaned[key] = d[key].replace(/\s+/g, " ").trim();
-          } else {
-            cleaned[key] = d[key];
-          }
+          cleaned[key] = typeof d[key] === "string"
+            ? d[key].replace(/\s+/g, " ").trim()
+            : d[key];
         }
         return cleaned;
       });
 
-      // Sort newest first
       logsData.sort((a, b) => parseReportedDate(b["Date Reported"]) - parseReportedDate(a["Date Reported"]));
       filteredData = [...logsData];
-
-      // ✅ All incidents tab: full dataset
       updateDateRangeNote(filteredData);
       rowsShown = 0;
       renderTable(true);
 
-      // Compute dataset date bounds
       const dates = logsData.map(d => parseReportedDate(d["Date Reported"]));
       const minDate = new Date(Math.min(...dates));
-      const maxDate = new Date(Math.max(...dates)); // latest reported date
+      const maxDate = new Date(Math.max(...dates));
 
       function toInputDateFormat(d) { return d.toISOString().split("T")[0]; }
-
-      // Dashboard input bounds
       document.getElementById("chartStartDate").setAttribute("min", toInputDateFormat(minDate));
       document.getElementById("chartStartDate").setAttribute("max", toInputDateFormat(maxDate));
       document.getElementById("chartEndDate").setAttribute("min", toInputDateFormat(minDate));
       document.getElementById("chartEndDate").setAttribute("max", toInputDateFormat(maxDate));
 
-      // ✅ Dashboard only: default to last 30 days ending at the most recent reported date
-      const end = maxDate;
-      const start = new Date(end);
+      // Default: last 30 days from most recent reported date
+      let end = maxDate;
+      let start = new Date(end);
       start.setDate(end.getDate() - 30);
 
-      document.getElementById("chartStartDate").value = toInputDateFormat(start < minDate ? minDate : start);
+      if (start < minDate) start = minDate;
+
+      document.getElementById("chartStartDate").value = toInputDateFormat(start);
       document.getElementById("chartEndDate").value = toInputDateFormat(end);
 
-      // Build dashboard chart with that window
-      buildDashboardChart(start < minDate ? minDate : start, end);
+      buildDashboardChart(start, end);
+
+      // Refresh chart whenever dates or campus filter change
+      ["chartStartDate","chartEndDate","dashboardOnCampus"].forEach(id => {
+        document.getElementById(id).addEventListener("change", () => {
+          const start = parsePacificDate(document.getElementById("chartStartDate").value);
+          const end = parsePacificDate(document.getElementById("chartEndDate").value);
+          if (start && end) buildDashboardChart(start, end);
+        });
+      });
     }
+
 
 
 
@@ -459,8 +462,11 @@
       "Party Shut Down": 'in:(Final Incident) "Party/Event Shut Down"',
       "Frat Row Noise": 'in:(Location) "900 Block Of 28TH ST" or "800 Block Of 28TH ST" or "700 Block Of 28TH ST" or "600 Block Of 28TH ST" and in:(Final Incident) "Loud and Raucous Noise"'
     };
+
+    
     function buildDashboardChart(start, end) {
       const campusChecked = document.getElementById("dashboardOnCampus").checked;
+
       const filtered = logsData.filter(d => {
         const dt = parseReportedDate(d["Date Reported"]);
         if (isNaN(dt) || dt < start || dt > end) return false;
@@ -486,20 +492,24 @@
               const query = categoryQueries[category];
               const fromDate = document.getElementById("chartStartDate").value;
               const toDate = document.getElementById("chartEndDate").value;
+
               let dateFilter = "";
               if (fromDate && toDate) {
-                const startStr = formatPacificDate(fromDate);
-                const endStr = formatPacificDate(toDate);
-                dateFilter = `from:(${startStr} to ${endStr}) and `;
+                dateFilter = `from:(${formatPacificDate(fromDate)} to ${formatPacificDate(toDate)}) and `;
               }
+
               let campusFilter = "";
               if (document.getElementById("dashboardOnCampus").checked) {
-                campusFilter = 'and in:(Location) "on campus"';
+                campusFilter = ' and in:(Location) "on campus"';
                 document.getElementById("logsOnCampus").checked = true;
               } else {
                 document.getElementById("logsOnCampus").checked = false;
               }
-              const fullQuery = `${dateFilter}${query} ${campusFilter}`.trim();
+
+              const fullQuery = `${dateFilter}${query}${campusFilter}`.trim();
+              console.log("Generated query:", fullQuery); // debug
+
+              // Switch to All incidents tab
               document.querySelector('[data-tab="allLogs"]').click();
               const searchBox = document.getElementById("searchAll");
               searchBox.value = fullQuery;
@@ -508,9 +518,6 @@
           }
         },
         plotOptions: { bar: { borderRadius: 3, columnWidth: '55%' } },
-        states: {
-          active: { filter: { type: 'none' } } // 👈 removes sticky "selected" darker state
-        },
         dataLabels: { enabled: false },
         xaxis: { 
           categories: seriesData.map(d => d.label), 
@@ -524,6 +531,7 @@
       chartDiv.innerHTML = "";
       new ApexCharts(chartDiv, options).render();
     }
+
 
 
    // -----------------------------
