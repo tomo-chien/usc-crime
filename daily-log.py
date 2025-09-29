@@ -1,104 +1,265 @@
+# backfill.py — incremental updater for USC DPS daily PDFs
+# - Reads usc_crime_logs.csv to find the latest date
+# - Checks one PDF per day from the NEXT day through TODAY
+# - Adds ONLY new rows (by unique Event #) to CSV and JSON, newest-first
+# - Prints:
+#     • whether the CSV was found (and its path)
+#     • the latest date detected in the CSV
+#
+# Requirements:
+#   pip install requests pdfplumber
+
 import requests
 import pdfplumber
-import io
-import datetime
 import csv
+import io
 import json
+import re
+from datetime import datetime, timedelta, date
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
+from typing import List, Tuple, Optional
 
-# === CONFIG ===
-OUTPUT_DIR = Path("data")
-OUTPUT_DIR.mkdir(exist_ok=True)
+# --------------------------------------------------------------------
+# Configuration (point explicitly to root-level files)
+# --------------------------------------------------------------------
+BASE_DIR = Path(__file__).resolve().parent
+CSV_FILE = BASE_DIR / "usc_crime_logs.csv"
+JSON_FILE = BASE_DIR / "usc_crime_logs.json"
 
-CSV_FILE = OUTPUT_DIR / "usc_log.csv"
-JSON_FILE = OUTPUT_DIR / "usc_log.json"
+# If no CSV exists yet, earliest date to backfill from:
+EARLIEST_DATE = date(2023, 12, 4)
+
+BASE_URL = "https://dps.usc.edu/wp-content/uploads/{year}/{month:02d}/{mmddyy}.pdf"
 
 HEADERS = [
     "Date Reported", "Event #", "Case #",
     "Offense", "Initial Incident", "Final Incident",
     "Date From", "Date To", "Location", "Disposition",
-    "URL"  # added URL column
+    "URL"
 ]
 
-def get_log_url():
-    today = datetime.date.today()
-    yyyy = today.year
-    mm = f"{today.month:02d}"
-    dd = f"{today.day:02d}"
-    yy = str(today.year)[-2:]
-    filename = f"{mm}{dd}{yy}.pdf"
-    return f"https://dps.usc.edu/wp-content/uploads/{yyyy}/{mm}/{filename}"
+# Column indexes for convenience
+IDX_DATE_REPORTED = 0
+IDX_EVENT = 1
+IDX_DATE_FROM = 6
+IDX_DATE_TO = 7
 
-def fetch_log_rows():
-    url = get_log_url()
-    print(f"Fetching {url}")
-    response = requests.get(url)
+# --------------------------------------------------------------------
+# Helpers
+# --------------------------------------------------------------------
 
-    # Gracefully handle missing logs
-    if response.status_code != 200:
-        print(f"No log found for today (status {response.status_code}). Exiting.")
-        return []
+DATE_RE = re.compile(r'(\d{1,2}/\d{1,2}/\d{2,4})')
 
-    pdf_file = io.BytesIO(response.content)
-    rows = []
+def parse_mmddyy_or_yyyy(s: str) -> Optional[date]:
+    """Parse MM/DD/YY or MM/DD/YYYY; return None on failure."""
+    s = s.strip()
+    for fmt in ("%m/%d/%y", "%m/%d/%Y"):
+        try:
+            return datetime.strptime(s, fmt).date()
+        except ValueError:
+            pass
+    # Lenient fallback via regex capture
+    m = DATE_RE.search(s)
+    if m:
+        mm, dd, yyyy = m.group(1).split("/")
+        if len(yyyy) == 2:
+            yyyy = str(2000 + int(yyyy))
+        try:
+            return date(int(yyyy), int(mm), int(dd))
+        except Exception:
+            return None
+    return None
 
-    with pdfplumber.open(pdf_file) as pdf:
-        for page in pdf.pages:
-            table = page.extract_table()
-            if table:
-                for row in table:
-                    if row[0] and row[0].startswith("Date Reported"):
+def parse_any_date_field(s: str) -> Optional[date]:
+    """Extract a date even if extra text/time is present (e.g., '09/05/2024 00:00')."""
+    if not s:
+        return None
+    m = DATE_RE.search(s)
+    if not m:
+        return None
+    return parse_mmddyy_or_yyyy(m.group(1))
+
+def best_row_date(row: List[str]) -> Optional[date]:
+    """
+    Choose the best available date from a row:
+    1) Date Reported
+    2) Date From
+    3) Date To
+    """
+    for idx in (IDX_DATE_REPORTED, IDX_DATE_FROM, IDX_DATE_TO):
+        if idx < len(row):
+            d = parse_any_date_field(row[idx])
+            if d:
+                return d
+    return None
+
+def load_existing_csv() -> Tuple[List[List[str]], set, Optional[date]]:
+    """
+    Load existing rows from CSV_FILE.
+    Returns:
+      - rows: list of row lists (without header)
+      - event_ids: set of existing Event # values
+      - latest_date: max date found among Date Reported / From / To
+    """
+    if not CSV_FILE.exists():
+        return [], set(), None
+
+    rows: List[List[str]] = []
+    event_ids = set()
+    latest: Optional[date] = None
+
+    with CSV_FILE.open("r", encoding="utf-8", newline="") as f:
+        reader = csv.reader(f)
+        _header = next(reader, None)  # skip header if present
+        for row in reader:
+            if not row:
+                continue
+            rows.append(row)
+            if len(row) > IDX_EVENT and row[IDX_EVENT]:
+                event_ids.add(row[IDX_EVENT])
+            d = best_row_date(row)
+            if d and (latest is None or d > latest):
+                latest = d
+
+    return rows, event_ids, latest
+
+def daterange(start: date, end: date):
+    """Inclusive generator from start to end (dates)."""
+    cur = start
+    while cur <= end:
+        yield cur
+        cur += timedelta(days=1)
+
+def normalize_row(cells: List[str], url: str) -> List[str]:
+    """
+    Ensure a row matches HEADERS length and is stripped of whitespace.
+    Assumes the PDF table columns correspond 1:1 with HEADERS[:-1] (before URL).
+    """
+    cleaned = [(c or "").strip() for c in cells]
+    target = len(HEADERS) - 1
+    if len(cleaned) > target:
+        cleaned = cleaned[:target]
+    while len(cleaned) < target:
+        cleaned.append("")
+    cleaned.append(url)
+    return cleaned
+
+def fetch_and_parse(d: date) -> Tuple[date, List[List[str]]]:
+    """
+    Fetch the daily PDF for date d and return parsed rows with URL appended.
+    Uses line-based table extraction for stability.
+    """
+    url = BASE_URL.format(year=d.year, month=d.month, mmddyy=d.strftime("%m%d%y"))
+    try:
+        r = requests.get(url, timeout=20)
+        if r.status_code != 200:
+            return d, []
+        with pdfplumber.open(io.BytesIO(r.content)) as pdf:
+            out_rows: List[List[str]] = []
+            for page in pdf.pages:
+                table = page.extract_table({
+                    "vertical_strategy": "lines",
+                    "horizontal_strategy": "lines"
+                })
+                if not table:
+                    continue
+                # Skip header row if first row contains "Date Reported"
+                start_idx = 0
+                if table and table[0]:
+                    if any("Date Reported" in (cell or "") for cell in table[0]):
+                        start_idx = 1
+                for raw in table[start_idx:]:
+                    if not raw:
                         continue
-                    cleaned = [cell.strip() if cell else "" for cell in row]
-                    cleaned.append(url)  # append URL column
-                    rows.append(cleaned)
-    return rows
+                    out_rows.append(normalize_row(raw, url))
+            return d, out_rows
+    except Exception:
+        return d, []
 
-def load_existing():
-    existing = []
-    if CSV_FILE.exists():
-        with open(CSV_FILE, newline="", encoding="utf-8") as f:
-            reader = csv.reader(f)
-            next(reader, None)  # skip header
-            existing = [row for row in reader]
-    return existing
-
-def save_csv(all_rows):
-    with open(CSV_FILE, "w", newline="", encoding="utf-8") as f:
+def write_csv(all_rows: List[List[str]]):
+    with CSV_FILE.open("w", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
         writer.writerow(HEADERS)
         writer.writerows(all_rows)
 
-def save_json(all_rows):
+def write_json(all_rows: List[List[str]]):
     data = [
-        {HEADERS[i]: row[i] if i < len(row) else "" for i in range(len(HEADERS))}
+        {HEADERS[i]: (row[i] if i < len(row) else "") for i in range(len(HEADERS))}
         for row in all_rows
     ]
-    with open(JSON_FILE, "w", encoding="utf-8") as f:
+    with JSON_FILE.open("w", encoding="utf-8") as f:
         json.dump(data, f, indent=2)
 
-def main():
-    new_rows = fetch_log_rows()
-    if not new_rows:
-        return  # exit gracefully, no file changes
+# --------------------------------------------------------------------
+# Main incremental updater
+# --------------------------------------------------------------------
 
-    existing_rows = load_existing()
-    existing_event_ids = {row[1] for row in existing_rows}  # Event # column
+def backfill_incremental(workers: int = 12):
+    # Print whether CSV exists, and its path
+    csv_exists = CSV_FILE.exists()
+    print(f"CSV {'found' if csv_exists else 'NOT found'} at: {CSV_FILE.resolve()}")
 
-    # Only keep new unique rows
-    unique_new_rows = [row for row in new_rows if row[1] not in existing_event_ids]
+    # Ensure CSV exists with header if not present
+    if not csv_exists:
+        with CSV_FILE.open("w", newline="", encoding="utf-8") as f:
+            csv.writer(f).writerow(HEADERS)
+
+    # Load archive and detect latest date
+    existing_rows, existing_event_ids, latest_found = load_existing_csv()
+    print(f"Latest date in CSV: {latest_found}")
+
+    # Determine the first date to check (day after latest_found)
+    if latest_found:
+        start_date = latest_found + timedelta(days=1)
+    else:
+        start_date = EARLIEST_DATE
+
+    today = datetime.today().date()
+    if start_date > today:
+        return  # up to date
+
+    # Build list of days to check (inclusive)
+    dates = list(daterange(start_date, today))
+
+    # Fetch PDFs in parallel
+    all_new_rows: List[List[str]] = []
+    with ThreadPoolExecutor(max_workers=workers) as executor:
+        futures = {executor.submit(fetch_and_parse, d): d for d in dates}
+        for future in as_completed(futures):
+            _d, rows = future.result()
+            if rows:
+                all_new_rows.extend(rows)
+
+    if not all_new_rows:
+        return  # nothing new found
+
+    # --- CHANGED: include rows even if Event # is missing ---
+    # Keep all rows whose Event # is empty OR not already seen.
+    unique_new_rows: List[List[str]] = []
+    seen = set(existing_event_ids)  # existing non-empty Event #s
+    for row in all_new_rows:
+        ev = row[IDX_EVENT] if len(row) > IDX_EVENT else ""
+        if ev and ev in seen:
+            continue  # duplicate with a real Event # — skip
+        unique_new_rows.append(row)
+        if ev:
+            seen.add(ev)  # track only non-empty Event #s
+    # --- end change ---
 
     if not unique_new_rows:
-        print("No new rows to add.")
         return
 
-    # Prepend new rows to the archive
+    # Sort new rows newest-first using the best available date in each row
+    today_dt = today
+    def row_dt(r: List[str]) -> date:
+        return best_row_date(r) or today_dt
+
+    unique_new_rows.sort(key=row_dt, reverse=True)
+
+    # Prepend new rows to existing (assumes existing roughly newest-first)
     combined = unique_new_rows + existing_rows
 
-    save_csv(combined)
-    save_json(combined)
-
-    print(f"Prepended {len(unique_new_rows)} new rows. Total now {len(combined)}.")
-
-if __name__ == "__main__":
-    main()
+    # Write outputs
+    write_csv(combined)
+    write_json(combined)

@@ -2,15 +2,14 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Crime</title>
-  <link rel="icon" href="favicon.png" type="image/png">
+  <link rel="icon" type="image/png" href="favicon.png">
   <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
   <style>
     body { font-family: Arial, sans-serif; margin: 20px; color: #222; background: #fff; }
-    h1 { font-size: 30px; font-weight: bold; margin-bottom: 5px; }
+    h1 { font-size: 24px; font-weight: bold; margin-bottom: 5px; }
     h1 span { color: #ac2124; }
-    h2.subheading { font-size: 14px; font-weight: normal; color: #666; margin-bottom: 20px; font-style: italic; }
+    h2.subheading { font-size: 14px; color: #555; margin-bottom: 20px; font-style: italic; }
     .tabs { margin-bottom: 15px; }
     .tab-button { padding: 10px 16px; margin-right: 5px; border: none; background: #ddd; cursor: pointer; border-radius: 6px 6px 0 0; }
     .tab-button.active { background: #ac2124; color: #fff; }
@@ -29,7 +28,6 @@
       border: 1px solid #ccc;
       border-radius: 4px;
     }
-
     table { border-collapse: collapse; width: 100%; font-size: 12px; table-layout: fixed; }
     thead { background-color: #ac2124; color: #fff; position: sticky; top: 0; z-index: 2; }
     th, td { border: 1px solid #ddd; padding: 6px; text-align: left; white-space: normal; word-wrap: break-word; overflow-wrap: break-word; }
@@ -38,9 +36,41 @@
     #loadMoreAll { display: block; margin: 20px auto; padding: 10px 18px; border: none; background: #ac2124; color: #fff; font-size: 14px; border-radius: 25px; cursor: pointer; }
     #loadMoreAll:hover { background: #800000; transform: scale(1.05); }
     #loadMoreAll:active { transform: scale(0.95); }
-    #categoryChart { max-width: 800px; margin: 40px auto 0 auto; }
+    #categoryChart { max-width: 800px; margin: 20px auto 0 auto; }
+    #crimeHeadline { text-align: center; font-size: 30px; font-weight: 800; line-height: 1.35; margin: 24px auto;}
+    #crimeHeadline span { color: inherit; }   /* override any old rule */
+    #crimeHeadline .pct { color: #ac2124; font-weight: 900; }
+    #crimeHeadline .trend-word { font-weight: 800; }
+    #yoyTrendChart { max-width: 1300px; margin: 14px auto 0; }
 
-    /* Advanced resources tab buttons */
+
+
+    #categoryHeadline { text-align: center; font-size: 16px; font-weight: 700; margin: 10px auto 6px auto; }
+    #dashFilters { display: flex; justify-content: center; gap: 14px; margin-bottom: 6px; }
+    #dashFilters label { margin-right: 0; }
+
+    #mcChart,#bikeChart,#partyChart{ max-width:800px; margin:10px auto 0; }
+
+
+    /* Match main headline size/weight for all subheadlines */
+    .subheadline { text-align: center; font-size: 28px; font-weight: 800; line-height: 1.35; margin: 24px auto 12px; }
+    @media (max-width: 768px) { .subheadline { font-size: 20px; } }
+
+    /* Any headline variable */
+    .pct, .var { color: #ac2124; font-weight: 900; }
+
+
+
+
+
+@media (max-width: 768px) {
+  #crimeHeadline { font-size: 20px; }
+}
+
+
+    #trendChart { max-width: 800px; margin: 20px auto 0 auto; }
+
+    /* Advanced resources */
     #resources button {
       margin: 5px 10px 10px 0;
       padding: 10px 16px;
@@ -51,80 +81,79 @@
       border-radius: 6px;
       cursor: pointer;
     }
-    #resources button:hover {
-      background: #800000;
+    #resources button:hover { background: #800000; }
+  
+
+    /* Stack email, checkboxes, and button vertically */
+    #emailForm {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      align-items: flex-start; /* keep button left-aligned */
     }
 
+    /* override earlier inline label spacing */
+    #emailForm label { margin: 0; }
+
+    /* keep the email input a nice width */
+    #emailForm input[type="email"] { width: 320px; max-width: 100%; }
+
+    /* button spacing */
+    #emailForm button { margin-top: 4px; }
+
+
+
+    /* Mobile cards */
     @media (max-width: 768px) {
-      body { 
-        margin: 10px; 
-        font-size: 14px; 
-        overflow-x: hidden; 
-      }
+      body { margin: 10px; font-size: 14px; overflow-x: hidden; }
       h1 { font-size: 20px; }
       .tab-button { flex: 1; font-size: 14px; padding: 8px; }
       table { font-size: 11px; width: 100%; max-width: 100%; border-collapse: separate; }
-
       table thead { display: none; }
       table, table tbody, table tr, table td { display: block; width: 100%; max-width: 100%; box-sizing: border-box; }
-      table tr { margin-bottom: 16px; padding: 12px 14px; border-radius: 12px; background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.08); }
-      table td {
-        text-align: left; 
-        padding: 6px 0 6px 38%; 
-        position: relative; 
-        border: none; 
-        border-bottom: 1px solid #f0f0f0; 
-        font-size: 13px;
-        white-space: normal !important;
-        word-break: break-word !important;
-        overflow-wrap: anywhere !important;
-        max-width: 100%;
-        box-sizing: border-box;
-      }
-      table td:last-child { border-bottom: none; }
-      table td::before {
-        content: attr(data-label); 
-        position: absolute; 
-        left: 10px; 
-        top: 6px; 
-        font-weight: 600; 
-        color: #555; 
-        font-size: 12px; 
-        text-transform: uppercase; 
-        letter-spacing: 0.5px;
-        width: 35%; 
-        max-width: 35%; 
-        display: inline-block;
-        box-sizing: border-box;
-        overflow-wrap: break-word;
-      }
-      #searchAll {
-        position: sticky;
-        top: 0;
-        z-index: 10;
-        background: #fff;
-      }
-      #loadMoreAll {
-        width: 100%;
-        font-size: 13px;
-        padding: 10px;
-        border-radius: 8px;
-      }
+      table tr { margin-bottom: 16px; padding: 12px 14px; border-radius: 12px; background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.08); cursor:pointer; transition: all 0.3s ease; }
+      table td { text-align: left; padding: 6px 0; border: none; font-size: 13px; }
+      .extra-fields { max-height:0; overflow:hidden; transition:max-height 0.3s ease; }
+      tr.expanded .extra-fields { max-height:500px; margin-top:10px; }
     }
   </style>
 </head>
 <body>
-  <h1>tomo.news/<span>crime</span></h1>
-  <h2 class="subheading">From the creator of Morning, Trojan</h2>
+  <h1>Morning, <span>Trojan.</span></h1>
+  <h2 class="subheading">Crime dashboard</h2>
 
   <div class="tabs">
-    <button class="tab-button active" data-tab="allLogs">All incidents</button>
-    <button class="tab-button" data-tab="dashboard">Dashboard</button>
+    <button class="tab-button active" data-tab="dashboard">Dashboard</button>
+    <button class="tab-button" data-tab="allLogs">All incidents</button>
     <button class="tab-button" data-tab="resources">Advanced resources</button>
   </div>
 
+ 
+   <!-- Dashboard -->
+  <div id="dashboard" class="tab-content active">
+
+
+  <div id="yoyHeadline" class="subheadline"></div>
+  <div id="yoyTrendChart"></div>
+
+
+    <!-- MOST COMMON CRIME TYPES -->
+    <div id="mcHeadline" class="subheadline"></div>
+    <div id="mcChart"></div>
+
+    <!-- BIKE/SCOOTER/SKATEBOARD THEFT -->
+    <div id="bikeHeadline" class="subheadline"></div>
+    <div id="bikeChart"></div>
+
+    <!-- PARTIES -->
+    <div id="partyHeadline" class="subheadline"></div>
+    <div id="partyChart"></div>
+  </div>
+
+
+
   <!-- Logs -->
-  <div id="allLogs" class="tab-content active">
+  <div id="allLogs" class="tab-content">
     <p id="dateRangeNote" style="font-size:14px;color:#555;margin-bottom:10px;"></p>
     <div class="filters">
       <label><input type="checkbox" id="logsOnCampus"> On campus only</label>
@@ -136,100 +165,23 @@
     <button id="loadMoreAll">Load more</button>
   </div>
 
-  <!-- Dashboard -->
-  <div id="dashboard" class="tab-content">
-    <div class="filters">
-      <label>From: <input type="date" id="chartStartDate"></label>
-      <label>To: <input type="date" id="chartEndDate"></label>
-      <label><input type="checkbox" id="dashboardOnCampus"> On campus only</label>
-    </div>
-    <div id="categoryChart"></div>
-  </div>
-
   <!-- Advanced resources -->
   <div id="resources" class="tab-content">
-
-    <h3 style="margin-top:20px;">Email Alerts Signup</h3>
-    <form id="emailForm" style="margin-top:10px;">
-      <input 
-        type="email" 
-        id="emailInput" 
-        placeholder="Enter your email" 
-        required 
-        style="padding:8px; margin-bottom:10px; border:1px solid #ccc; border-radius:4px; width:250px;"
-      ><br>
-
-      <label><input type="checkbox" id="daily"> Daily report</label><br>
-      <label><input type="checkbox" id="weekly"> Weekly report</label><br>
-      <label><input type="checkbox" id="frat"> Weekly report (frat row)</label><br><br>
-
-      <button 
-        type="submit" 
-        style="padding:8px 16px; background:#ac2124; color:#fff; border:none; border-radius:4px; cursor:pointer;"
-      >
-        Subscribe
-      </button>
-    </form>
-
-
-
-    <script>
-
-      // ================================
-      // Email Alerts Form Submission (GET approach)
-      // ================================
-      document.addEventListener("DOMContentLoaded", function() {
-        const form = document.getElementById("emailForm");
-        if (!form) return;
-
-        form.addEventListener("submit", function(e) {
-          e.preventDefault();
-          e.stopPropagation();
-
-          const userEmail = document.getElementById("emailInput").value;
-          const dailyChecked = document.getElementById("daily").checked;
-          const weeklyChecked = document.getElementById("weekly").checked;
-          const fratChecked = document.getElementById("frat").checked;
-
-          const url = "https://script.google.com/macros/s/AKfycbwAkY-tMnqOl6sFfUa4V8hTs_sW0OI1ciDKhXLIH4pzCJlEh7BZ9eLKFqEcpPVE3kiGCg/exec" +
-            "?email=" + encodeURIComponent(userEmail) +
-            "&daily=" + dailyChecked +
-            "&weekly=" + weeklyChecked +
-            "&fratrow=" + fratChecked;
-
-          fetch(url)
-            .then(res => res.json())
-            .then(data => {
-              if (data.status === "success") {
-                alert("✅ Signed up successfully!");
-                form.reset();
-              } else {
-                alert("⚠️ Error: " + data.message);
-              }
-            })
-            .catch(err => {
-              alert("⚠️ Network error: " + err);
-            });
-        });
-      });
-
-    </script>
-
-
     <h3>Download Data</h3>
     <p>You can download the full dataset in different formats:</p>
     <button id="downloadCSV">Download CSV</button>
     <button id="downloadJSON">Download JSON</button>
 
-    <h3 style="margin-top:20px;">Advanced Search Guide</h3>
-    <ul>
-      <li><b>in:(Column) "phrase"</b> → search only within a column (e.g. <code>in:(Offense) "Burglary"</code>)</li>
-      <li><b>from:MM/DD/YYYY to MM/DD/YYYY</b> → filter by date reported</li>
-      <li><b>after:MM/DD/YYYY</b> / <b>before:MM/DD/YYYY</b> → filter before/after a date</li>
-      <li><b>and</b> / <b>or</b> → combine multiple search conditions</li>
-      <li><b>"quoted text"</b> → exact phrase search</li>
-      <li><b>word1 word2</b> → matches if either word appears (OR)</li>
-    </ul>
+    <h3 style="margin-top:20px;">Email Alerts</h3>
+    <form id="emailForm">
+      <input type="email" id="emailInput" placeholder="Your email" required>
+      <label><input type="checkbox" id="daily"> Daily report</label>
+      <label><input type="checkbox" id="weekly"> Weekly report</label>
+      <label><input type="checkbox" id="frat"> Weekly report (frat row)</label>
+      <button type="submit">Subscribe</button>
+    </form>
+
+
   </div>
 
   <script>
@@ -245,457 +197,687 @@
         document.getElementById(btn.dataset.tab).classList.add("active");
       });
     });
-
-    // Utility: convert JSON → CSV
-    function convertToCSV(data) {
-      if (!data.length) return "";
-      const headers = Object.keys(data[0]).join(",");
-      const rows = data.map(row => 
-        Object.values(row).map(val => `"${(val || "").toString().replace(/"/g, '""')}"`).join(",")
-      );
-      return [headers, ...rows].join("\n");
-    }
-
-    // Download CSV
-    document.getElementById("downloadCSV").addEventListener("click", () => {
-      const csv = convertToCSV(logsData);
-      const blob = new Blob([csv], { type: "text/csv" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "usc_crime_logs.csv";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    });
-
-    // Download JSON
-    document.getElementById("downloadJSON").addEventListener("click", () => {
-      const blob = new Blob([JSON.stringify(logsData, null, 2)], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "usc_crime_logs.json";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    });
-
-    // -----------------------------
-    // Utility functions
-    // -----------------------------
-    function parseReportedDate(str) {
+    // Utilities
+    function parseFromDate(str) {
       if (!str) return new Date(0);
-      const match = str.match(/(\d{2})\/(\d{2})\/(\d{2})/);
-      if (!match) return new Date(0);
-      let [_, mm, dd, yy] = match;
-      let year = parseInt(yy, 10);
-      year += year < 50 ? 2000 : 1900;
-      return new Date(year, parseInt(mm) - 1, parseInt(dd));
-    }
-
-    function updateDateRangeNote(data) {
-      if (!data.length) {
-        document.getElementById("dateRangeNote").textContent = "No data available.";
-        return;
-      }
-      const dates = data.map(d => parseReportedDate(d["Date Reported"]));
-      const minDate = new Date(Math.min(...dates));
-      const maxDate = new Date(Math.max(...dates));
-      document.getElementById("dateRangeNote").textContent =
-        `Data is available from ${minDate.toLocaleDateString()} to ${maxDate.toLocaleDateString()}`;
-    }
-
-    async function loadLogs() {
-      const response = await fetch("usc_crime_logs.json");
-      logsData = await response.json();
-
-      // Normalize whitespace
-      logsData = logsData.map(d => {
-        const cleaned = {};
-        for (const key in d) {
-          cleaned[key] = typeof d[key] === "string"
-            ? d[key].replace(/\s+/g, " ").trim()
-            : d[key];
-        }
-        return cleaned;
-      });
-
-      logsData.sort((a, b) => parseReportedDate(b["Date Reported"]) - parseReportedDate(a["Date Reported"]));
-      filteredData = [...logsData];
-      updateDateRangeNote(filteredData);
-      rowsShown = 0;
-      renderTable(true);
-
-      const dates = logsData.map(d => parseReportedDate(d["Date Reported"]));
-      const minDate = new Date(Math.min(...dates));
-      const maxDate = new Date(Math.max(...dates));
-
-      function toInputDateFormat(d) { return d.toISOString().split("T")[0]; }
-      document.getElementById("chartStartDate").setAttribute("min", toInputDateFormat(minDate));
-      document.getElementById("chartStartDate").setAttribute("max", toInputDateFormat(maxDate));
-      document.getElementById("chartEndDate").setAttribute("min", toInputDateFormat(minDate));
-      document.getElementById("chartEndDate").setAttribute("max", toInputDateFormat(maxDate));
-
-      // Default: last 30 days from most recent reported date
-      let end = maxDate;
-      let start = new Date(end);
-      start.setDate(end.getDate() - 30);
-
-      if (start < minDate) start = minDate;
-
-      document.getElementById("chartStartDate").value = toInputDateFormat(start);
-      document.getElementById("chartEndDate").value = toInputDateFormat(end);
-
-      buildDashboardChart(start, end);
-
-      // Refresh chart whenever dates or campus filter change
-      ["chartStartDate","chartEndDate","dashboardOnCampus"].forEach(id => {
-        document.getElementById(id).addEventListener("change", () => {
-          const start = parsePacificDate(document.getElementById("chartStartDate").value);
-          const end = parsePacificDate(document.getElementById("chartEndDate").value);
-          if (start && end) buildDashboardChart(start, end);
-        });
-      });
-    }
-
-
-
-
-   function renderTable(reset = false) {
-    const table = document.getElementById("logsTableAll");
-    if (reset) table.innerHTML = "";
-
-    let displayData = [...filteredData];
-    if (!displayData.length) {
-      table.innerHTML = "<tr><td>No results found</td></tr>";
-      document.getElementById("loadMoreAll").style.display = "none";
-      return;
-    }
-
-    // Hide the URL column from the table
-    const columns = Object.keys(displayData[0]).filter(col => col !== "URL");
-
-    if (reset) {
-      const thead = document.createElement("thead");
-      const headRow = document.createElement("tr");
-      columns.forEach(col => {
-        const th = document.createElement("th");
-        th.textContent = col;
-        th.style.width = (100 / columns.length) + "%";
-        headRow.appendChild(th);
-      });
-      thead.appendChild(headRow);
-      table.appendChild(thead);
-    }
-
-    let tbody = table.querySelector("tbody");
-    if (!tbody) {
-      tbody = document.createElement("tbody");
-      table.appendChild(tbody);
-    }
-
-    const end = Math.min(rowsShown + rowsPerPage, displayData.length);
-    for (let i = rowsShown; i < end; i++) {
-      const row = displayData[i];
-      const tr = document.createElement("tr");
-
-      columns.forEach(col => {
-        const td = document.createElement("td");
-
-        if (col === "Event #") {
-          const url = row["URL"] || "";
-          if (url) {
-            const a = document.createElement("a");
-            a.href = url;
-            a.textContent = row[col] || "";
-            a.target = "_blank";
-            a.classList.add("event-link");
-            td.appendChild(a);
-          } else {
-            td.textContent = row[col] || "";
-          }
-        } else {
-          td.textContent = row[col] || "";
-        }
-
-        td.setAttribute("data-label", col);
-        tr.appendChild(td);
-      });
-
-      tbody.appendChild(tr);
-    }
-
-    rowsShown = end;
-    document.getElementById("loadMoreAll").style.display =
-      rowsShown < displayData.length ? "block" : "none";
-  }
-
-
-
-
-    // Date helpers
-    function parsePacificDate(val) {
-      if (!val) return null;
-      const [yyyy, mm, dd] = val.split("-").map(Number);
-      return new Date(yyyy, mm - 1, dd);
+      const m = str.match(/(\d{2})\/(\d{2})\/(\d{2})/);
+      if (!m) return new Date(0);
+      let [_, mm, dd, yy] = m;
+      let year = +yy < 50 ? 2000 + +yy : 1900 + +yy;
+      return new Date(year, mm - 1, dd);
     }
     function formatPacificDate(val) {
-      const d = parsePacificDate(val);
+      const d = new Date(val);
       return `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`;
     }
 
-    // -----------------------------
-    // 📊 Dashboard
-    // -----------------------------
-    const categoryQueries = {
+    // Animate counters
+    function animateValue(el, start, end, duration) {
+      const range = end - start;
+      if (range === 0) { el.textContent = end + "%"; return; }
+      let startTime;
+      function step(ts) {
+        if (!startTime) startTime = ts;
+        const progress = Math.min((ts - startTime) / duration, 1);
+        el.textContent = Math.round(start + range * progress) + "%";
+        if (progress < 1) requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    }
+
+    // latest "Date From" in the dataset
+    function latestDateFrom(){
+      const ds = logsData.map(d=>parseFromDate(d["Date From"])).filter(d=>!isNaN(d));
+      return new Date(Math.max(...ds));
+    }
+    // last 30-day window based on latest Date From
+    function last30(){
+      const end = latestDateFrom();
+      const start = new Date(end); start.setDate(start.getDate()-29);
+      return {start,end};
+    }
+    // month helpers
+    function startOfMonth(d){ return new Date(d.getFullYear(), d.getMonth(), 1); }
+    function endOfMonth(d){ return new Date(d.getFullYear(), d.getMonth()+1, 0); }
+    function addMonths(d,n){ return new Date(d.getFullYear(), d.getMonth()+n, 1); }
+    function plural(n, one, many){ return n===1?one:many; }
+
+    function monthLabel(ts){
+      const d = new Date(ts);
+      const last = latestDateFrom();
+      const base = d.toLocaleString(undefined, { month: "short" });
+      const isCur = d.getMonth() === last.getMonth() && d.getFullYear() === last.getFullYear();
+      return isCur ? `${base} (MTD)` : base;
+    }
+
+
+
+    // MOST COMMON
+    const mostCommonQueries = {
       "Assault": 'in:(Offense) "ASSAULT -" or "ASSAULT-"',
       "Battery": 'in:(Offense) "BATTERY -" or "BATTERY-"',
       "Rape": 'in:(Offense) "SEX OFFENSE - Rape" or "SEX OFFENSE-Rape"',
       "Robbery": 'in:(Offense) "ROBBERY -" or "ROBBERY-"',
+      "Kidnapping": 'in:(Offense) "KIDNAPPING -"',
+
+      "Theft": 'in:(Offense) "THEFT-PETTY -" or "THEFT-MOTOR VEHICLE -" or "THEFT-TRICK -" or "THEFT-GRAND -"',
+      "Motor vehicle theft": 'in:(Offense) "MOTOR VEHICLE THEFT -"',
+
       "Burglary": 'in:(Offense) "BURGLARY -" or "BURGLARY-"',
-      "Bike/Scooter/Skateboard Theft": 'in:(Offense) "MOTOR VEHICLE THEFT - Theft of Motorized Bicycle/Scooter" or "THEFT-PETTY - Theft Bicycle"',
-      "Alcohol Overdose": 'in:(Final Incident) "Alcohol Overdose"',
-      "Drug Overdose": 'in:(Final Incident) "Drug Overdose"',
-      "Party Shut Down": 'in:(Final Incident) "Party/Event Shut Down"',
-      "Frat Row Noise": 'in:(Location) "900 Block Of 28TH ST" or "800 Block Of 28TH ST" or "700 Block Of 28TH ST" or "600 Block Of 28TH ST" and in:(Final Incident) "Loud and Raucous Noise"'
+      "Arson": 'in:(Offense) "ARSON -"',
+      "Vandalism": 'in:(Offense) "VANDALISM -"',
+      "Trespassing": 'in:(Offense) "TRESPASS -"'
     };
 
-    
-    function buildDashboardChart(start, end) {
-      const campusChecked = document.getElementById("dashboardOnCampus").checked;
+    // BIKE/SCOOTER/SKATEBOARD THEFT
+    const bikeQuery = 'in:(Offense) "MOTOR VEHICLE THEFT - Theft of Motorized Bicycle/Scooter" or "THEFT-PETTY - Theft Bicycle"';
 
-      const filtered = logsData.filter(d => {
-        const dt = parseReportedDate(d["Date Reported"]);
-        if (isNaN(dt) || dt < start || dt > end) return false;
-        if (campusChecked && !(d["Location"] || "").toLowerCase().includes("on campus")) return false;
-        return true;
-      });
-
-      const seriesData = [];
-      for (const [label, query] of Object.entries(categoryQueries)) {
-        const tokens = parseQuery(query);
-        const count = filtered.filter(row => evaluateRow(row, tokens)).length;
-        seriesData.push({ label, count, query });
-      }
-
-      const options = {
-        chart: { 
-          type: 'bar', 
-          height: 400, 
-          toolbar: { show: false }, 
-          events: {
-            dataPointSelection: function(event, chartContext, config) {
-              const category = options.xaxis.categories[config.dataPointIndex];
-              const query = categoryQueries[category];
-              const fromDate = document.getElementById("chartStartDate").value;
-              const toDate = document.getElementById("chartEndDate").value;
-
-              let dateFilter = "";
-              if (fromDate && toDate) {
-                dateFilter = `from:(${formatPacificDate(fromDate)} to ${formatPacificDate(toDate)}) and `;
-              }
-
-              let campusFilter = "";
-              if (document.getElementById("dashboardOnCampus").checked) {
-                campusFilter = ' and in:(Location) "on campus"';
-                document.getElementById("logsOnCampus").checked = true;
-              } else {
-                document.getElementById("logsOnCampus").checked = false;
-              }
-
-              const fullQuery = `${dateFilter}${query}${campusFilter}`.trim();
-              console.log("Generated query:", fullQuery); // debug
-
-              // Switch to All incidents tab
-              document.querySelector('[data-tab="allLogs"]').click();
-              const searchBox = document.getElementById("searchAll");
-              searchBox.value = fullQuery;
-              searchBox.dispatchEvent(new Event("input"));
-            }
-          }
-        },
-        plotOptions: { bar: { borderRadius: 3, columnWidth: '55%' } },
-        dataLabels: { enabled: false },
-        xaxis: { 
-          categories: seriesData.map(d => d.label), 
-          labels: { rotate: -30, style: { fontSize: '12px' } } 
-        },
-        colors: ["#ac2124"],
-        series: [{ name: "Incidents", data: seriesData.map(d => d.count) }]
-      };
-
-      const chartDiv = document.querySelector("#categoryChart");
-      chartDiv.innerHTML = "";
-      new ApexCharts(chartDiv, options).render();
-    }
+    // PARTIES & RELATED (last 30 days chart)
+    const partyQueries = {
+      "Party shut down": 'in:(Final Incident) "Party/Event Shut Down"',
+      "Noise complaint": 'in:(Final Incident) "Loud and Raucous Noise"',
+      "Alcohol Overdose": 'in:(Final Incident) "Alcohol Overdose"',
+      "Drug Overdose": 'in:(Final Incident) "Drug Overdose"'
+    };
 
 
 
-   // -----------------------------
-  // Query Parsing / Evaluation
-  // -----------------------------
+    // Query parsing + row evaluation
     function parseQuery(query) {
-      return query.match(
-        /from:\([^)]*\)|after:\d{1,2}\/\d{1,2}\/\d{4}|before:\d{1,2}\/\d{1,2}\/\d{4}|in:\([^)]+\)\s+"[^"]+"|in:\([^)]+\)\s+[^\s]+|"(.*?)"|and|or|[^\s]+/gi
-      ) || [];
+      return query.match(/from:\(\d{1,2}\/\d{1,2}\/\d{4}\s+to\s+\d{1,2}\/\d{1,2}\/\d{4}\)|after:\d{1,2}\/\d{1,2}\/\d{4}|before:\d{1,2}\/\d{1,2}\/\d{4}|in:\([^)]+\)\s+"[^"]+"|in:\([^)]+\)\s+[^\s]+|"(.*?)"|and|or|[^\s]+/gi) || [];
     }
 
     function evaluateRow(row, tokens) {
-      let result = null;
-      let currentOp = "AND";
-      let lastColumn = null;
-
-      // Track date validity separately
-      let dateValid = true;
-
+      let result = null, currentOp = "AND", lastColumn = null;
       for (let t of tokens) {
         const token = t.toLowerCase();
-        if (token === "and") { currentOp = "AND"; continue; }
-        if (token === "or") { currentOp = "OR"; continue; }
-
-        let condition = false;
-
+        if (token==="and"){currentOp="AND";continue;}
+        if (token==="or"){currentOp="OR";continue;}
+        let condition=false;
         if (token.startsWith("from:(")) {
-          const m = token.match(/from:\((\d{1,2}\/\d{1,2}\/\d{4})\s+to\s+(\d{1,2}\/\d{1,2}\/\d{4})\)/i);
-          if (m) {
-            const start = new Date(m[1]);
-            const end = new Date(m[2]);
-            const dt = parseReportedDate(row["Date Reported"]);
-            dateValid = dt >= start && dt <= end;
-          }
-          continue; // don’t mix into OR/AND logic
-        }
-        else if (token.startsWith("after:")) {
-          const m = token.match(/after:(\d{1,2}\/\d{1,2}\/\d{4})/);
-          if (m) {
-            const dt = parseReportedDate(row["Date Reported"]);
-            dateValid = dt > new Date(m[1]);
-          }
-          continue;
-        }
-        else if (token.startsWith("before:")) {
-          const m = token.match(/before:(\d{1,2}\/\d{1,2}\/\d{4})/);
-          if (m) {
-            const dt = parseReportedDate(row["Date Reported"]);
-            dateValid = dt < new Date(m[1]);
-          }
-          continue;
-        }
-        else if (token.startsWith("in:(")) {
-          const m = token.match(/in:\(([^)]+)\)\s*(.+)/);
-          if (m) {
-            const col = m[1].trim().toLowerCase();
-            lastColumn = colMap[col];
-            condition = matchValue(row[lastColumn], m[2].trim());
-          }
-        }
-        else if (lastColumn) {
-          condition = matchValue(row[lastColumn], token);
-        }
-        else {
-          condition = matchRow(row, token);
-        }
-
-        if (result === null) result = condition;
-        else if (currentOp === "AND") result = result && condition;
-        else if (currentOp === "OR") result = result || condition;
+          const m=token.match(/from:\((\d{1,2}\/\d{1,2}\/\d{4})\s+to\s+(\d{1,2}\/\d{1,2}\/\d{4})\)/);
+          if(m){const start=new Date(m[1]), end=new Date(m[2]), dt=parseFromDate(row["Date From"]); condition=dt>=start&&dt<=end;}
+        } else if(token.startsWith("after:")) {
+          const m=token.match(/after:(\d{1,2}\/\d{1,2}\/\d{4})/); if(m){const dt=parseFromDate(row["Date From"]); condition=dt>new Date(m[1]);}
+        } else if(token.startsWith("before:")) {
+          const m=token.match(/before:(\d{1,2}\/\d{1,2}\/\d{4})/); if(m){const dt=parseFromDate(row["Date From"]); condition=dt<new Date(m[1]);}
+        } else if(token.startsWith("in:(")) {
+          const m=token.match(/in:\(([^)]+)\)\s*(.+)/); if(m){const col=m[1].trim().toLowerCase(); lastColumn=colMap[col]; condition=matchValue(row[lastColumn],m[2].trim());}
+        } else if(lastColumn){condition=matchValue(row[lastColumn],token);}
+        else{condition=matchRow(row,token);}
+        if(result===null)result=condition; else if(currentOp==="AND")result=result&&condition; else if(currentOp==="OR")result=result||condition;
       }
-
-      // Enforce date filter separately
-      return dateValid && (result === null ? true : result);
+      return result===null?false:result;
     }
 
-
-
-    function matchValue(cell, valString) {
-      const cellVal = (cell || "").toLowerCase();
-      if (valString.startsWith('"') && valString.endsWith('"')) {
-        const val = valString.slice(1, -1).toLowerCase();
+    function matchValue(cell,valString){
+      const cellVal=(cell||"").toLowerCase();
+      if(valString.startsWith('"')&&valString.endsWith('"')){
+        const val=valString.slice(1,-1).toLowerCase();
         return cellVal.includes(val);
       } else {
-        const words = valString.split(/\s+/);
-        return words.some(w => cellVal.includes(w.toLowerCase()));
+        const words=valString.split(/\s+/);
+        return words.some(w=>cellVal.includes(w.toLowerCase()));
       }
     }
 
-    function matchRow(row, valString) {
-      if (valString.startsWith('"') && valString.endsWith('"')) {
-        const val = valString.slice(1, -1).toLowerCase();
-        return Object.values(row).some(v => v && v.toString().toLowerCase().includes(val));
+    function matchRow(row,valString){
+      if(valString.startsWith('"')&&valString.endsWith('"')){
+        const val=valString.slice(1,-1).toLowerCase();
+        return Object.values(row).some(v=>v&&v.toString().toLowerCase().includes(val));
       } else {
-        const words = valString.split(/\s+/);
-        return words.some(w =>
-          Object.values(row).some(v => v && v.toString().toLowerCase().includes(w.toLowerCase()))
-        );
+        const words=valString.split(/\s+/);
+        return words.some(w=>Object.values(row).some(v=>v&&v.toString().toLowerCase().includes(w.toLowerCase())));
       }
     }
 
     const colMap = {
-      "date reported": "Date Reported",
-      "event #": "Event #",
-      "case #": "Case #",
-      "offense": "Offense",
-      "initial incident": "Initial Incident",
-      "final incident": "Final Incident",
-      "date from": "Date From",
-      "date to": "Date To",
-      "location": "Location",
-      "disposition": "Disposition"
+      "date reported":"Date Reported",
+      "event #":"Event #",
+      "case #":"Case #",
+      "offense":"Offense",
+      "initial incident":"Initial Incident",
+      "final incident":"Final Incident",
+      "date from":"Date From",
+      "date to":"Date To",
+      "location":"Location",
+      "disposition":"Disposition",
+      "url":"URL"
     };
+    // Render table (desktop + mobile)
+    function renderTable(reset=false) {
+      const table=document.getElementById("logsTableAll"); 
+      if(reset)table.innerHTML="";
+      let displayData=[...filteredData];
+      if(!displayData.length){
+        table.innerHTML="<tr><td>No results found</td></tr>";
+        document.getElementById("loadMoreAll").style.display="none";
+        return;
+      }
 
-    // Search bar
-    document.getElementById("searchAll").addEventListener("input", e => {
-      const q = e.target.value.trim();
-      if (!q) { filteredData = [...logsData]; renderTable(true); return; }
+      const columns=Object.keys(displayData[0]);
+      if(reset){
+        const thead=document.createElement("thead");
+        const headRow=document.createElement("tr");
+        columns.forEach(col=>{
+          if(col==="URL")return;
+          const th=document.createElement("th");
+          th.textContent=col;
+          th.style.width=(100/columns.length)+"%";
+          headRow.appendChild(th);
+        });
+        thead.appendChild(headRow);
+        table.appendChild(thead);
+      }
 
-      const tokens = parseQuery(q);
-      if (!tokens.some(t => /in:|and|or|from:|after:|before:/i.test(t))) {
-        const words = q.toLowerCase().split(/\s+/);
-        filteredData = logsData.filter(row =>
-          words.some(w => Object.values(row).some(val => val && val.toString().toLowerCase().includes(w)))
+      let tbody=table.querySelector("tbody"); 
+      if(!tbody){tbody=document.createElement("tbody");table.appendChild(tbody);}
+      const end=Math.min(rowsShown+rowsPerPage,displayData.length);
+
+      for(let i=rowsShown;i<end;i++){
+        const row=displayData[i];
+        const tr=document.createElement("tr");
+
+        if(window.innerWidth<=768){
+          // Mobile summary
+          const summaryFields=["Date Reported","Final Incident","Location"];
+          summaryFields.forEach(col=>{
+            const td=document.createElement("td");
+            td.textContent=row[col]||"";
+            tr.appendChild(td);
+          });
+
+          const extra=document.createElement("div");
+          extra.classList.add("extra-fields");
+          Object.keys(row).forEach(col=>{
+            if(summaryFields.includes(col)||col==="URL")return;
+            const div=document.createElement("div");
+            div.textContent=col+": "+(row[col]||"");
+            extra.appendChild(div);
+          });
+          tr.appendChild(extra);
+
+          tr.addEventListener("click",()=>{tr.classList.toggle("expanded");});
+
+        } else {
+          // Desktop
+          Object.keys(row).forEach(col=>{
+            if(col==="URL")return;
+            const td=document.createElement("td");
+            if(col==="Event #"&&row["URL"]){
+              const a=document.createElement("a");
+              a.href=row["URL"];
+              a.textContent=row[col]||"";
+              a.style.color="#ac2124";
+              a.target="_blank";
+              td.appendChild(a);
+            } else {
+              td.textContent=row[col]||"";
+            }
+            td.setAttribute("data-label",col);
+            tr.appendChild(td);
+          });
+        }
+        tbody.appendChild(tr);
+      }
+
+      rowsShown=end;
+      document.getElementById("loadMoreAll").style.display=rowsShown<displayData.length?"block":"none";
+    }
+
+async function loadLogs() {
+  const response = await fetch("usc_crime_logs.json");
+  logsData = await response.json();
+
+  // Clean whitespace
+  logsData = logsData.map(d => {
+    const cleaned = {};
+    for (const k in d) cleaned[k] = typeof d[k] === "string" ? d[k].replace(/\s+/g, " ").trim() : d[k];
+    return cleaned;
+  });
+
+  // Sort newest first by Date From
+  logsData.sort((a,b) => parseFromDate(b["Date From"]) - parseFromDate(a["Date From"]));
+
+  // Table
+  filteredData = [...logsData];
+  updateDateRangeNote(filteredData);
+  rowsShown = 0;
+  renderTable(true);
+
+  // --- DASHBOARD MODULES ---
+  buildYoYTrendChart();
+  buildMostCommonChart();     // all-time most common types
+  buildBikeTheftChart();      // 12-month line + last-30 headline
+  buildPartiesChart();        // last-30 bars + headline
+}
+
+
+    // Update incidents tab note
+    function updateDateRangeNote(data){
+      const dates = data
+        .map(d => parseFromDate(d["Date Reported"]))
+        .filter(d => !isNaN(d));
+      if (!dates.length) {
+        document.getElementById("dateRangeNote").textContent = "No data available.";
+        return;
+      }
+      const minDate = new Date(Math.min(...dates));
+      const maxDate = new Date(Math.max(...dates));
+      document.getElementById("dateRangeNote").textContent =
+        `Data available from ${minDate.toLocaleDateString()} to ${maxDate.toLocaleDateString()}`;
+    }
+
+    function plural(n, one, many) {
+      return n === 1 ? one : many;
+    }
+
+
+
+
+
+    // Dashboard listeners
+    ["chartStartDate","chartEndDate"].forEach(id=>{
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.addEventListener("change",()=>{
+        const start=new Date(document.getElementById("chartStartDate").value);
+        const end=new Date(document.getElementById("chartEndDate").value);
+        if(!isNaN(start) && !isNaN(end)) buildDashboardChart(start,end);
+      });
+    });
+
+    // Search box
+    document.getElementById("searchAll").addEventListener("input",e=>{
+      const q=e.target.value.trim();
+      if(!q){
+        filteredData=[...logsData];
+        renderTable(true);
+        return;
+      }
+      const tokens=parseQuery(q);
+      if(!tokens.some(t=>/in:|and|or|from:|after:|before:/i.test(t))){
+        const words=q.toLowerCase().split(/\s+/);
+        filteredData=logsData.filter(row=>
+          words.some(w=>Object.values(row).some(val=>val&&val.toString().toLowerCase().includes(w)))
         );
       } else {
-        filteredData = logsData.filter(row => evaluateRow(row, tokens));
+        filteredData=logsData.filter(row=>evaluateRow(row,tokens));
       }
-      rowsShown = 0;
+      rowsShown=0;
       renderTable(true);
     });
 
-    // On campus checkbox
-    function applyOnCampusFilter(checkboxId) {
-      const box = document.getElementById("searchAll");
-      let query = box.value.trim();
-      const checked = document.getElementById(checkboxId).checked;
-
-      if (checked) {
-        if (!query.toLowerCase().includes('in:(location) "on campus"')) {
-          query = query ? query + " and in:(Location) \"on campus\"" : 'in:(Location) "on campus"';
+    // On-campus filter
+    function applyOnCampusFilter(checkboxId){
+      const box=document.getElementById("searchAll");
+      let query=box.value.trim();
+      const checked=document.getElementById(checkboxId).checked;
+      if(checked){
+        if(!query.toLowerCase().includes('in:(location) "on campus"')){
+          query=query ? query+' and in:(Location) "on campus"' : 'in:(Location) "on campus"';
         }
       } else {
-        query = query.replace(/\s*and\s*in:\(location\)\s*"on campus"/i, "");
-        query = query.replace(/in:\(location\)\s*"on campus"\s*and\s*/i, "");
-        query = query.replace(/in:\(location\)\s*"on campus"/i, "");
+        query=query.replace(/\s*and\s*in:\(location\)\s*"on campus"/i,"");
+        query=query.replace(/in:\(location\)\s*"on campus"\s*and\s*/i,"");
+        query=query.replace(/in:\(location\)\s*"on campus"/i,"");
       }
-
-      box.value = query.trim();
+      box.value=query.trim();
       box.dispatchEvent(new Event("input"));
     }
+    document.getElementById("logsOnCampus").addEventListener("change",()=>applyOnCampusFilter("logsOnCampus"));
+    document.getElementById("loadMoreAll").addEventListener("click",()=>renderTable(false));
 
-    document.getElementById("logsOnCampus").addEventListener("change", () => applyOnCampusFilter("logsOnCampus"));
-    document.getElementById("loadMoreAll").addEventListener("click", () => renderTable(false));
+    // Email form
+    document.getElementById("emailForm").addEventListener("submit",async e=>{
+      e.preventDefault();
+      const email=document.getElementById("emailInput").value;
+      const daily=document.getElementById("daily").checked;
+      const weekly=document.getElementById("weekly").checked;
+      const fratrow=document.getElementById("frat").checked;
+      try{
+        const resp=await fetch("YOUR_APPS_SCRIPT_DEPLOYMENT_URL",{
+          method:"POST",
+          body:JSON.stringify({email,daily,weekly,fratrow}),
+          headers:{"Content-Type":"application/json"}
+        });
+        const data=await resp.json();
+        if(data.status==="success") alert("Subscribed!");
+        else alert("Error: "+data.message);
+      }catch(err){
+        alert("Network error: "+err.message);
+      }
+    });
 
-    function getDefaultRange() {
-      const end = new Date();
-      const start = new Date();
-      start.setDate(end.getDate() - 30);
-      return { start, end };
-    }
 
+function buildMostCommonChart() {
+  const container = document.getElementById("mcChart");
+  const headlineEl = document.getElementById("mcHeadline");
+  if (!container || !headlineEl) return;
+  if (!logsData || !logsData.length) {
+    headlineEl.textContent = "No data available.";
+    container.innerHTML = "";
+    return;
+  }
+
+  // local helper: lowercase first letter
+  const lcFirst = s => (s ? s.charAt(0).toLowerCase() + s.slice(1) : s);
+
+  // last 30 days based on latest "Date From" (uses your existing last30())
+  const { start, end } = last30();
+
+  // violent categories use yellow
+  const violent = new Set(["Assault", "Battery", "Rape", "Robbery", "Kidnapping"]);
+
+  // Build counts for the last 30 days only
+  const labels = Object.keys(mostCommonQueries);
+  const counts = labels.map(label => {
+    const tokens = parseQuery(mostCommonQueries[label]);
+    return logsData.filter(row => {
+      const dt = parseFromDate(row["Date From"]);
+      return !isNaN(dt) && dt >= start && dt <= end && evaluateRow(row, tokens);
+    }).length;
+  });
+
+  // Headline: most common category (lowercase first letter), handle ties simply
+  const max = Math.max(...counts);
+  const leaders = labels.filter((_, i) => counts[i] === max);
+  const leaderText = lcFirst(leaders[0]) + (leaders.length > 1 ? " (tie)" : "");
+  headlineEl.innerHTML = `In the last 30 days, the most common crime was <span class="pct">${leaderText}</span>.`;
+
+  // Colors per bar (violent = yellow, else red)
+  const colors = labels.map(l => (violent.has(l) ? "#FFCC00" : "#ac2124"));
+
+  // Render bar chart (no legend, distributed colors)
+  container.innerHTML = "";
+  new ApexCharts(container, {
+    chart: { type: "bar", height: 320, toolbar: { show: false } },
+    legend: { show: false },
+    plotOptions: { bar: { borderRadius: 3, columnWidth: "55%", distributed: true } },
+    dataLabels: { enabled: false },
+    xaxis: { categories: labels, labels: { rotate: -30, style: { fontSize: "12px" } } },
+    yaxis: { min: 0, forceNiceScale: true, title: { text: "# of incidents (last 30 days)" } },
+    series: [{ name: "Incidents", data: counts }],
+    colors
+  }).render();
+}
+
+
+function buildBikeTheftChart(){
+  if (!logsData?.length) return;
+
+  const startOfMonth = d => new Date(d.getFullYear(), d.getMonth(), 1);
+  const endOfMonth   = d => new Date(d.getFullYear(), d.getMonth()+1, 0, 23,59,59,999);
+  const addMonths    = (d,n) => new Date(d.getFullYear(), d.getMonth()+n, 1);
+  const inRange      = (dt,s,e) => !isNaN(dt) && dt >= s && dt <= e;
+
+  const latest = latestDateFrom();
+  const start30 = new Date(latest); start30.setDate(start30.getDate()-29);
+
+  const bikeTok = parseQuery(
+    'in:(Offense) "MOTOR VEHICLE THEFT - Theft of Motorized Bicycle/Scooter" or "THEFT-PETTY - Theft Bicycle"'
+  );
+
+  // Headline
+  const last30Count = logsData.filter(r=>{
+    const dt = parseFromDate(r["Date From"]);
+    return inRange(dt, start30, latest) && evaluateRow(r, bikeTok);
+  }).length;
+  document.getElementById("bikeHeadline").innerHTML =
+    `There were <span class="pct">${last30Count}</span> bikes, scooters, and skateboards reported stolen.`;
+
+  // Monthly counts
+  const curMonth   = startOfMonth(latest);
+  const firstMonth = addMonths(curMonth, -11);
+  const months     = [];
+  for (let m = new Date(firstMonth); m <= curMonth; m = addMonths(m,1)) months.push(new Date(m));
+
+  const monthlyCounts = months.map(m=>{
+    const ms = startOfMonth(m), me = endOfMonth(m);
+    return logsData.reduce((acc,row)=>{
+      const dt = parseFromDate(row["Date From"]);
+      return acc + (inRange(dt, ms, me) && evaluateRow(row, bikeTok) ? 1 : 0);
+    }, 0);
+  });
+
+  const isPartialMonth = latest < endOfMonth(curMonth);
+
+  const categories = months.map(m=>{
+    const base = m.toLocaleString(undefined,{month:"short"});
+    return (m.getMonth()===curMonth.getMonth() && m.getFullYear()===curMonth.getFullYear() && isPartialMonth)
+      ? `${base} (MTD)` : base;
+  });
+
+  // Break the base series and create a transparent overlay for the final segment
+  const baseSeries = monthlyCounts.slice();
+  const overlaySeries = new Array(monthlyCounts.length).fill(null);
+
+  if (isPartialMonth && monthlyCounts.length >= 2) {
+    // remove the final point from the base so the last segment isn't drawn at full opacity
+    baseSeries[baseSeries.length - 1] = null;
+    // overlay only the connecting segment
+    overlaySeries[overlaySeries.length - 2] = monthlyCounts[monthlyCounts.length - 2];
+    overlaySeries[overlaySeries.length - 1] = monthlyCounts[monthlyCounts.length - 1];
+  }
+
+  const el = document.getElementById("bikeChart");
+  el.innerHTML = "";
+
+  const series = [{ name:"Thefts", data: baseSeries }];
+  if (isPartialMonth) {
+    series.push({
+      name: "Thefts (MTD link)",
+      data: overlaySeries,
+      color: "rgba(172,33,36,0.4)", // same hue, more transparent
+      stroke: { width: 3, curve: "smooth" },
+      markers: { size: 3, colors: "rgba(172,33,36,0.4)", strokeColors: "rgba(172,33,36,0.4)" }
+    });
+  }
+
+  new ApexCharts(el, {
+    chart:{ type:"line", height:320, toolbar:{show:false}, zoom:{enabled:false} },
+    stroke:{ width:3, curve:"smooth" },
+    markers:{ size:3 },
+    series,
+    colors: ["#ac2124", "rgba(172,33,36,0.4)"],
+    xaxis:{
+      type:"category",
+      categories,
+      tickPlacement:"on",
+      labels:{ rotate:-30, style:{ fontSize:"12px" } },
+      tooltip:{ enabled:false }
+    },
+    yaxis:{ min:0, forceNiceScale:true, title:{ text:"# of incidents" } },
+    legend:{ show:false }
+  }).render();
+}
+
+
+
+
+
+function buildPartiesChart(){
+  const {start,end} = last30();
+
+  const labels = Object.keys(partyQueries);
+  const counts = labels.map(label=>{
+    const tokens = parseQuery(partyQueries[label]);
+    return logsData.filter(r=>{
+      const dt = parseFromDate(r["Date From"]);
+      return !isNaN(dt) && dt>=start && dt<=end && evaluateRow(r,tokens);
+    }).length;
+  });
+
+  const shutDown = counts[labels.indexOf("Party shut down")] || 0;
+  const noise = counts[labels.indexOf("Noise complaint")] || 0;
+
+  document.getElementById("partyHeadline").innerHTML =
+    `DPS shut down <span class="pct">${shutDown}</span> ${plural(shutDown,"party","parties")} and logged <span class="pct">${noise}</span> ${plural(noise,"noise complaint","noise complaints")}.`;
+
+
+  new ApexCharts(document.getElementById("partyChart"), {
+    chart:{ type:"bar", height:320, toolbar:{show:false} },
+    plotOptions:{ bar:{ borderRadius:3, columnWidth:"55%" } },
+    dataLabels:{ enabled:false },
+    xaxis:{ categories:labels, labels:{ rotate:-15, style:{fontSize:"12px"} } },
+    yaxis:{ min:0, forceNiceScale:true, title:{ text:"# of incidents (last 30 days)" } },
+    colors:["#ac2124"],
+    series:[{ name:"Incidents", data:counts }]
+  }).render();
+}
+
+
+function buildYoYTrendChart() {
+  const headlineEl = document.getElementById("yoyHeadline");
+  const chartEl = document.getElementById("yoyTrendChart");
+  if (!headlineEl || !chartEl) return;
+  if (!logsData || !logsData.length) {
+    headlineEl.textContent = "No data available.";
+    chartEl.innerHTML = "";
+    return;
+  }
+
+  const toStartOfDay = d => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+  const weekStart = d => { const s = toStartOfDay(d); s.setDate(s.getDate() - s.getDay()); return s; };
+  const inRange = (dt, s, e) => !isNaN(dt) && dt >= s && dt <= e;
+
+  const monthLabel = (ts) => {
+    const d = new Date(ts);
+    const last = latestDateFrom();
+    const base = d.toLocaleString(undefined, { month: "short" });
+    return (d.getMonth() === last.getMonth() && d.getFullYear() === last.getFullYear())
+      ? `${base} (MTD)` : base;
+  };
+
+  const propTokens = parseQuery('in:(Offense) "theft" or "burglary" or "arson" or "vandalism" or "trespass"');
+  const violTokens = parseQuery('in:(Offense) "robbery" or "assault" or "battery" or "rape" or "murder" or "homicide" or "kidnapping" or "carjacking"');
+  const isReported = r => evaluateRow(r, propTokens) || evaluateRow(r, violTokens);
+
+  const endCurr = latestDateFrom();
+  const startCurr = addDays(endCurr, -29);
+  const startPrev = new Date(startCurr); startPrev.setFullYear(startPrev.getFullYear() - 1);
+  const endPrev   = new Date(endCurr);   endPrev.setFullYear(endPrev.getFullYear() - 1);
+
+  const currTotal = logsData.filter(r => inRange(parseFromDate(r["Date From"]), startCurr, endCurr) && isReported(r)).length;
+  const prevTotal = logsData.filter(r => inRange(parseFromDate(r["Date From"]), startPrev, endPrev) && isReported(r)).length;
+
+  if (prevTotal < 1) {
+    headlineEl.textContent = "Not enough data for a year-over-year comparison.";
+  } else {
+    const pct = Math.round(((currTotal - prevTotal) / prevTotal) * 100);
+    const word = (pct >= 0) ? "up" : "down";
+    headlineEl.innerHTML =
+      `Reported crimes are <span class="trend-word">${word}</span> <span class="pct"><span>${Math.abs(pct)}</span>%</span> compared to this time last year.`;
+  }
+
+  const firstMonth = new Date(endCurr.getFullYear(), endCurr.getMonth() - 15, 1);
+  const firstWeekStart = weekStart(firstMonth);
+  const lastWeekStart  = weekStart(endCurr);
+
+  const weeks = [];
+  for (let ws = new Date(firstWeekStart); ws <= lastWeekStart; ws = addDays(ws, 7)) {
+    weeks.push({ ws, we: addDays(ws, 6) });
+  }
+
+  const propSeries = [];
+  const violSeries = [];
+  weeks.forEach(({ ws, we }) => {
+    let p = 0, v = 0;
+    logsData.forEach(row => {
+      const dt = parseFromDate(row["Date From"]);
+      if (!inRange(dt, ws, we)) return;
+      if (evaluateRow(row, propTokens)) p++;
+      else if (evaluateRow(row, violTokens)) v++;
+    });
+    const x = ws.getTime();
+    propSeries.push({ x, y: p });
+    violSeries.push({ x, y: v });
+  });
+
+  const bandColor = "#ac2124";
+  const annotations = {
+    position: "front",
+    xaxis: [
+      {
+        x: startCurr.getTime(),
+        x2: endCurr.getTime(),
+        fillColor: bandColor,
+        opacity: 0.25,
+        borderColor: bandColor,
+        borderWidth: 2,
+        label: { text: "Last 30 days", style: { color: "#000", fontSize: "11px", background: "#fff",
+                 padding: { left: 6, right: 6, top: 2, bottom: 2 } } }
+      },
+      {
+        x: startPrev.getTime(),
+        x2: endPrev.getTime(),
+        fillColor: bandColor,
+        opacity: 0.12,
+        borderColor: bandColor,
+        borderWidth: 2
+      }
+    ]
+  };
+
+  // determine if the *last week* is incomplete (week-to-date)
+  const lastWeekEnd = addDays(lastWeekStart, 6);
+  const isPartialWeek = endCurr < lastWeekEnd;
+
+  // if incomplete, lower the fill opacity for just that final bar
+  if (isPartialWeek && weeks.length) {
+    const lastIdx = weeks.length - 1;
+    propSeries[lastIdx] = { ...propSeries[lastIdx], fillColor: "rgba(172,33,36,0.5)" };
+    violSeries[lastIdx] = { ...violSeries[lastIdx], fillColor: "rgba(255,204,0,0.5)" };
+  }
+
+  chartEl.innerHTML = "";
+  new ApexCharts(chartEl, {
+    chart: { type: "bar", height: 340, stacked: true, toolbar: { show: false }, zoom: { enabled: false } },
+    series: [
+      { name: "Property", data: propSeries },
+      { name: "Violent",  data: violSeries }
+    ],
+    colors: ["#ac2124", "#FFCC00"],
+    plotOptions: { bar: { columnWidth: "65%", borderRadius: 2 } },
+    dataLabels: { enabled: false },
+    xaxis: {
+      type: "datetime",
+      min: firstWeekStart.getTime(),
+      max: addDays(lastWeekStart, 6).getTime(),
+      tickAmount: 16,
+      tickPlacement: "on",
+      labels: {
+        formatter: monthLabel,
+        style: { fontSize: "12px" }
+      },
+      tooltip: { enabled: false }
+    },
+    yaxis: { min: 0, forceNiceScale: true, title: { text: "# of incidents" } },
+    legend: { position: "top" },
+    tooltip: {
+      shared: true,
+      intersect: false,
+      x: {
+        formatter: (val) => {
+          const s = new Date(val), e = addDays(s, 6);
+          const fmt = d => d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+          return `Week of ${fmt(s)} – ${fmt(e)}`;
+        }
+      }
+    },
+    annotations
+  }).render();
+}
+
+
+
+
+
+    // Init
     loadLogs();
   </script>
+
+
 </body>
 </html>
-
