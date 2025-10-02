@@ -3,16 +3,41 @@ name: Run daily-log every 10 minutes
 on:
   schedule:
     - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write   # <-- allow push with GITHUB_TOKEN
 
 jobs:
   run-script:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0              # we need full history to commit cleanly
+
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.x'
+
       - name: Install dependencies
         run: pip install -r requirements.txt
-      - name: Run daily-log script
+
+      - name: Run updater
         run: python daily-log.py
+
+      - name: Configure git author
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Commit & push if changed
+        run: |
+          # Limit to the files your script updates to avoid committing noise
+          git add usc_crime_logs.csv usc_crime_logs.json || true
+          if ! git diff --cached --quiet; then
+            git commit -m "Auto-update logs [skip ci]"
+            git push
+          else
+            echo "No changes to commit."
+          fi
