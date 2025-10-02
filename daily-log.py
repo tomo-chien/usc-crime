@@ -1,16 +1,16 @@
+#!/usr/bin/env python3
 # backfill.py — incremental updater for USC DPS daily PDFs
 # - Reads usc_crime_logs.csv to find the latest date
-# - Checks one PDF per day from the NEXT day through TODAY
-# - Adds ONLY new rows (by unique Event #) to CSV and JSON, newest-first
+# - Checks one PDF per day from the LATEST DATE IN CSV through TODAY (inclusive)
+# - Adds ONLY new rows (by unique Event # when present) to CSV and JSON, newest-first
 # - Prints:
 #     • whether the CSV was found (and its path)
 #     • the latest date detected in the CSV
+#     • which dates were checked and how many rows were parsed/kept
 #
 # Requirements:
 #   pip install requests pdfplumber
 
-import requests
-import pdfplumber
 import csv
 import io
 import json
@@ -19,6 +19,9 @@ from datetime import datetime, timedelta, date
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import List, Tuple, Optional
+
+import requests
+import pdfplumber
 
 # --------------------------------------------------------------------
 # Configuration (point explicitly to root-level files)
@@ -53,7 +56,7 @@ DATE_RE = re.compile(r'(\d{1,2}/\d{1,2}/\d{2,4})')
 
 def parse_mmddyy_or_yyyy(s: str) -> Optional[date]:
     """Parse MM/DD/YY or MM/DD/YYYY; return None on failure."""
-    s = s.strip()
+    s = (s or "").strip()
     for fmt in ("%m/%d/%y", "%m/%d/%Y"):
         try:
             return datetime.strptime(s, fmt).date()
@@ -82,7 +85,7 @@ def parse_any_date_field(s: str) -> Optional[date]:
 
 def best_row_date(row: List[str]) -> Optional[date]:
     """
-    Choose the best available date from a row:
+    Choose the best available date from a row, in priority:
     1) Date Reported
     2) Date From
     3) Date To
@@ -99,7 +102,7 @@ def load_existing_csv() -> Tuple[List[List[str]], set, Optional[date]]:
     Load existing rows from CSV_FILE.
     Returns:
       - rows: list of row lists (without header)
-      - event_ids: set of existing Event # values
+      - event_ids: set of existing Event # values (non-empty only)
       - latest_date: max date found among Date Reported / From / To
     """
     if not CSV_FILE.exists():
@@ -136,7 +139,7 @@ def normalize_row(cells: List[str], url: str) -> List[str]:
     Ensure a row matches HEADERS length and is stripped of whitespace.
     Assumes the PDF table columns correspond 1:1 with HEADERS[:-1] (before URL).
     """
-    cleaned = [(c or "").strip() for c in cells]
+    cleaned = [str(c or "").strip() for c in cells]
     target = len(HEADERS) - 1
     if len(cleaned) > target:
         cleaned = cleaned[:target]
@@ -175,6 +178,7 @@ def fetch_and_parse(d: date) -> Tuple[date, List[List[str]]]:
                     out_rows.append(normalize_row(raw, url))
             return d, out_rows
     except Exception:
+        # Swallow exceptions per day to keep the run resilient
         return d, []
 
 def write_csv(all_rows: List[List[str]]):
@@ -205,37 +209,50 @@ def backfill_incremental(workers: int = 12):
         with CSV_FILE.open("w", newline="", encoding="utf-8") as f:
             csv.writer(f).writerow(HEADERS)
 
-    # Load archive and detect latest date
+    # Load archive and detect latest date + existing Event #s
     existing_rows, existing_event_ids, latest_found = load_existing_csv()
     print(f"Latest date in CSV: {latest_found}")
 
-    # Determine the first date to check (day after latest_found)
+    # Determine the first date to check
+    # IMPORTANT: include latest_found again so we can pick up late updates the same day
+    today = datetime.today().date()
     if latest_found:
-        start_date = latest_found + timedelta(days=1)
+        start_date = latest_found
     else:
         start_date = EARLIEST_DATE
 
-    today = datetime.today().date()
     if start_date > today:
-        return  # up to date
+        print("Already up to date. Nothing to do.")
+        return
 
     # Build list of days to check (inclusive)
     dates = list(daterange(start_date, today))
+    print(f"Checking PDFs from {start_date} through {today} "
+          f"({len(dates)} day{'s' if len(dates) != 1 else ''})")
 
-    # Fetch PDFs in parallel
+    # Fetch PDFs in parallel (with simple debug per day)
     all_new_rows: List[List[str]] = []
     with ThreadPoolExecutor(max_workers=workers) as executor:
         futures = {executor.submit(fetch_and_parse, d): d for d in dates}
         for future in as_completed(futures):
-            _d, rows = future.result()
+            d = futures[future]
+            try:
+                _d, rows = future.result()
+            except Exception as e:
+                print(f"[{d}] ERROR during fetch/parse: {e}")
+                rows = []
             if rows:
+                print(f"[{d}] parsed {len(rows)} row(s).")
                 all_new_rows.extend(rows)
+            else:
+                print(f"[{d}] no PDF or no rows found.")
 
     if not all_new_rows:
-        return  # nothing new found
+        print("No new rows discovered across the checked dates.")
+        return
 
-    # --- CHANGED: include rows even if Event # is missing ---
-    # Keep all rows whose Event # is empty OR not already seen.
+    # Include rows even if Event # is missing; dedupe only when Event # is present
+    before_dedupe = len(all_new_rows)
     unique_new_rows: List[List[str]] = []
     seen = set(existing_event_ids)  # existing non-empty Event #s
     for row in all_new_rows:
@@ -245,9 +262,11 @@ def backfill_incremental(workers: int = 12):
         unique_new_rows.append(row)
         if ev:
             seen.add(ev)  # track only non-empty Event #s
-    # --- end change ---
+
+    print(f"Collected {before_dedupe} row(s); kept {len(unique_new_rows)} after de-duplication.")
 
     if not unique_new_rows:
+        print("All discovered rows were duplicates. Nothing to write.")
         return
 
     # Sort new rows newest-first using the best available date in each row
@@ -263,3 +282,9 @@ def backfill_incremental(workers: int = 12):
     # Write outputs
     write_csv(combined)
     write_json(combined)
+    print(f"Wrote CSV:  {CSV_FILE.resolve()}")
+    print(f"Wrote JSON: {JSON_FILE.resolve()}")
+    print(f"Added {len(unique_new_rows)} new row(s). Done.")
+
+if __name__ == "__main__":
+    backfill_incremental(workers=12)
