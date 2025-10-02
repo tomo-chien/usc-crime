@@ -871,6 +871,50 @@ function buildYoYTrendChart() {
 }
 
 
+function triggerDownloadFromBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+async function downloadFile(path, filename, mime) {
+  try {
+    // Build an absolute URL and bypass cache so you get the freshest Action-updated file
+    const url = new URL(path, window.location.href).toString();
+    const res = await fetch(url + (url.includes('?') ? '&' : '?') + '_=' + Date.now(), { cache: 'no-store' });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const blob = await res.blob();
+
+    // If server didn't send a type, force one
+    const typedBlob = blob.type ? blob : new Blob([blob], { type: mime });
+    triggerDownloadFromBlob(typedBlob, filename);
+  } catch (err) {
+    console.error('Download failed:', err);
+    // Fallback: navigate to the file (lets the browser handle it)
+    window.location.href = path;
+  }
+}
+
+// ---- Wire up the buttons ----
+const btnCSV = document.getElementById('downloadCSV');
+const btnJSON = document.getElementById('downloadJSON');
+
+if (btnCSV) {
+  btnCSV.addEventListener('click', () =>
+    downloadFile('usc_crime_logs.csv', 'usc_crime_logs.csv', 'text/csv;charset=utf-8')
+  );
+}
+if (btnJSON) {
+  btnJSON.addEventListener('click', () =>
+    downloadFile('usc_crime_logs.json', 'usc_crime_logs.json', 'application/json;charset=utf-8')
+  );
+}
+
 
 
 
