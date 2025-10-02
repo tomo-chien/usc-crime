@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <title>Crime</title>
   <link rel="icon" type="image/png" href="favicon.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
   <style>
     body { font-family: Arial, sans-serif; margin: 20px; color: #222; background: #fff; }
@@ -63,9 +64,9 @@
 
 
 
-@media (max-width: 768px) {
-  #crimeHeadline { font-size: 20px; }
-}
+    @media (max-width: 768px) {
+      #crimeHeadline { font-size: 20px; }
+    }
 
 
     #trendChart { max-width: 800px; margin: 20px auto 0 auto; }
@@ -115,7 +116,48 @@
       table td { text-align: left; padding: 6px 0; border: none; font-size: 13px; }
       .extra-fields { max-height:0; overflow:hidden; transition:max-height 0.3s ease; }
       tr.expanded .extra-fields { max-height:500px; margin-top:10px; }
+
+
+       /* Charts should scale fully to the container */
+      #yoyTrendChart, #mcChart, #bikeChart, #partyChart {
+        width: 100%;
+        max-width: 100%;
+      }
+
+      /* ApexCharts SVG/canvas can shrink on mobile */
+      .apexcharts-canvas, .apexcharts-svg, .apexcharts-inner {
+        max-width: 100% !important;
+        width: 100% !important;
+      }
+
+      /* Horizontal scrolling feels natural on iOS */
+      .table-container {
+        -webkit-overflow-scrolling: touch;
+      }
+     .tabs {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+
+      .tab-button {
+        width: 100%;
+        border-radius: 10px;
+      }
+
+      /* Dashboard goes first and spans both columns */
+      .tab-button[data-tab="dashboard"] {
+        order: 1;
+        grid-column: 1 / -1;
+      }
+
+      /* Other two go beneath, side by side */
+      .tab-button[data-tab="allLogs"]   { order: 2; }
+      .tab-button[data-tab="resources"] { order: 3; }
     }
+
+  
+
   </style>
 </head>
 <body>
@@ -666,7 +708,7 @@ function buildBikeTheftChart(){
   const series = [{ name:"Thefts", data: baseSeries }];
   if (isPartialMonth) {
     series.push({
-      name: "Thefts (MTD link)",
+      name: "Thefts (MTD)",
       data: overlaySeries,
       color: "rgba(172,33,36,0.4)", // same hue, more transparent
       stroke: { width: 3, curve: "smooth" },
