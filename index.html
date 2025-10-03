@@ -61,6 +61,16 @@
     .pct, .var { color: #ac2124; font-weight: 900; }
 
 
+    .adv-help code {
+      background: #f6f6f6; padding: 2px 6px; border-radius: 4px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 12px;
+    }
+    .paramlist, .examplelist { margin: 8px 0 16px 18px; }
+    .paramlist li, .examplelist li { margin: 8px 0; }
+    .adv-help .note { color:#666; font-size:12px; margin-left:6px; }
+    .adv-help .notes { color:#555; font-size:13px; }
+
+
 
 
 
@@ -83,24 +93,7 @@
       cursor: pointer;
     }
     #resources button:hover { background: #800000; }
-  
 
-    /* Stack email, checkboxes, and button vertically */
-    #emailForm {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      align-items: flex-start; /* keep button left-aligned */
-    }
-
-    /* override earlier inline label spacing */
-    #emailForm label { margin: 0; }
-
-    /* keep the email input a nice width */
-    #emailForm input[type="email"] { width: 320px; max-width: 100%; }
-
-    /* button spacing */
-    #emailForm button { margin-top: 4px; }
 
 
 
@@ -210,23 +203,64 @@
     <button id="loadMoreAll">Load more</button>
   </div>
 
+
   <!-- Advanced resources -->
+
   <div id="resources" class="tab-content">
     <h3>Download Data</h3>
     <p>You can download the full dataset in different formats:</p>
     <button id="downloadCSV">Download CSV</button>
     <button id="downloadJSON">Download JSON</button>
 
-    <h3 style="margin-top:20px;">Email Alerts</h3>
-    <form id="emailForm">
-      <input type="email" id="emailInput" placeholder="Your email" required>
-      <label><input type="checkbox" id="daily"> Daily report</label>
-      <label><input type="checkbox" id="weekly"> Weekly report</label>
-      <label><input type="checkbox" id="frat"> Weekly report (frat row)</label>
-      <button type="submit">Subscribe</button>
-    </form>
+    <hr style="margin:24px 0; border:none; border-top:1px solid #eee;">
 
+    <h3>Advanced search functions</h3>
+    <p>The search box in the "All incidents" tab supports powerful filters.</p>
 
+    <div class="adv-help">
+      <h4>Parameters</h4>
+      <ul class="paramlist">
+        <li>
+          <strong>Exact phrase</strong>: wrap in quotes.<br>
+          <code>"bike theft"</code>
+        </li>
+        <li>
+          <strong>Column filter</strong>: <code>in:(Column) value</code> or <code>in:(Column) "exact phrase"</code><br>
+          Columns: <code>Date Reported</code>, <code>Event #</code>, <code>Case #</code>, <code>Offense</code>, <code>Initial Incident</code>, <code>Final Incident</code>, <code>Date From</code>, <code>Date To</code>, <code>Location</code>, <code>Disposition</code>, <code>URL</code>
+        </li>
+        <li>
+          <strong>Date range</strong> (uses <code>Date From</code>):<br>
+          <code>from:(MM/DD/YYYY to MM/DD/YYYY)</code>
+        </li>
+        <li>
+          <strong>Date after / before</strong> (uses <code>Date From</code>):<br>
+          <code>after:MM/DD/YYYY</code> &nbsp; <code>before:MM/DD/YYYY</code>
+        </li>
+        <li>
+          <strong>Logic</strong>: use <code>and</code> / <code>or</code> between terms.
+        </li>
+      </ul>
+
+      <h4>Examples</h4>
+      <ul class="examplelist">
+        <li>
+          All incidents on campus:<br>
+          <code>in:(Location) "on campus"</code>
+        </li>
+        <li>
+          Robberies in September 2024:<br>
+          <code>in:(Offense) robbery and from:(09/01/2024 to 09/30/2024)</code>
+        </li>
+        <li>
+          Noise complaints on frat row<br>
+          <code>in:(Location) "900 Block Of 28TH ST" or "800 Block Of 28TH ST" or "700 Block Of 28TH ST" or "600 Block Of 28TH ST" and in:(Final Incident) "Loud and Raucous Noise"</code>
+        </li>
+      </ul>
+
+      <p class="notes">
+        Notes: searches are case-insensitive; phrases with spaces need quotes; column names must match exactly (as listed above).
+      </p>
+    </div>
   </div>
 
   <script>
@@ -573,26 +607,6 @@ async function loadLogs() {
     document.getElementById("logsOnCampus").addEventListener("change",()=>applyOnCampusFilter("logsOnCampus"));
     document.getElementById("loadMoreAll").addEventListener("click",()=>renderTable(false));
 
-    // Email form
-    document.getElementById("emailForm").addEventListener("submit",async e=>{
-      e.preventDefault();
-      const email=document.getElementById("emailInput").value;
-      const daily=document.getElementById("daily").checked;
-      const weekly=document.getElementById("weekly").checked;
-      const fratrow=document.getElementById("frat").checked;
-      try{
-        const resp=await fetch("YOUR_APPS_SCRIPT_DEPLOYMENT_URL",{
-          method:"POST",
-          body:JSON.stringify({email,daily,weekly,fratrow}),
-          headers:{"Content-Type":"application/json"}
-        });
-        const data=await resp.json();
-        if(data.status==="success") alert("Subscribed!");
-        else alert("Error: "+data.message);
-      }catch(err){
-        alert("Network error: "+err.message);
-      }
-    });
 
 
 function buildMostCommonChart() {
