@@ -606,6 +606,28 @@ if (btnJSON) {
 
 
 
+  // Show warning modal on page load
+  const modal = document.getElementById('warningModal');
+  const closeBtn = document.getElementById('closeModal');
+  
+  // Check if user has dismissed before
+  if (!localStorage.getItem('warningDismissed')) {
+    modal.classList.add('show');
+  }
+  
+  closeBtn.addEventListener('click', () => {
+    modal.classList.remove('show');
+    localStorage.setItem('warningDismissed', 'true');
+  });
+  
+  // Close modal when clicking outside
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      modal.classList.remove('show');
+      localStorage.setItem('warningDismissed', 'true');
+    }
+  });
+
   // Init
   loadLogs();
 
