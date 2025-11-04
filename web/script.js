@@ -240,7 +240,11 @@ function renderTable(reset=false) {
 
 async function loadLogs() {
   // Add cache-busting parameter to ensure fresh data
-  const response = await fetch("../data/usc_crime_logs.json?" + new Date().getTime());
+  // Try root-level data path first (for GitHub Pages), fallback to ../data/ (for local web/)
+  const dataPath = "data/usc_crime_logs.json";
+  const response = await fetch(dataPath + "?" + new Date().getTime()).catch(() => 
+    fetch("../data/usc_crime_logs.json?" + new Date().getTime())
+  );
   logsData = await response.json();
 
   // Clean whitespace
@@ -697,14 +701,20 @@ const btnCSV = document.getElementById('downloadCSV');
 const btnJSON = document.getElementById('downloadJSON');
 
 if (btnCSV) {
-  btnCSV.addEventListener('click', () =>
-    downloadFile('../data/usc_crime_logs.csv', 'usc_crime_logs.csv', 'text/csv;charset=utf-8')
-  );
+  btnCSV.addEventListener('click', () => {
+    const csvPath = 'data/usc_crime_logs.csv';
+    downloadFile(csvPath, 'usc_crime_logs.csv', 'text/csv;charset=utf-8').catch(() =>
+      downloadFile('../data/usc_crime_logs.csv', 'usc_crime_logs.csv', 'text/csv;charset=utf-8')
+    );
+  });
 }
 if (btnJSON) {
-  btnJSON.addEventListener('click', () =>
-    downloadFile('../data/usc_crime_logs.json', 'usc_crime_logs.json', 'application/json;charset=utf-8')
-  );
+  btnJSON.addEventListener('click', () => {
+    const jsonPath = 'data/usc_crime_logs.json';
+    downloadFile(jsonPath, 'usc_crime_logs.json', 'application/json;charset=utf-8').catch(() =>
+      downloadFile('../data/usc_crime_logs.json', 'usc_crime_logs.json', 'application/json;charset=utf-8')
+    );
+  });
 }
 
 
