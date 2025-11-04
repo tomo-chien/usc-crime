@@ -1,0 +1,7 @@
+# GitHub Pages configuration
+# This ensures index.html is served instead of README.md
+theme: jekyll-theme-minimal
+include:
+  - data
+  - web
+
