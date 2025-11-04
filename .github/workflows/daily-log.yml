@@ -24,7 +24,17 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Run updater
-        run: python daily-log.py
+        run: python scripts/daily-log.py
+
+      - name: Generate chart data
+        env:
+          DATAWRAPPER_API_TOKEN: ${{ secrets.DATAWRAPPER_API_TOKEN }}
+          DATAWRAPPER_CHART_MOSTCOMMON: ${{ secrets.DATAWRAPPER_CHART_MOSTCOMMON }}
+          DATAWRAPPER_CHART_BIKETHEFTS: ${{ secrets.DATAWRAPPER_CHART_BIKETHEFTS }}
+          DATAWRAPPER_CHART_PARTIES: ${{ secrets.DATAWRAPPER_CHART_PARTIES }}
+          DATAWRAPPER_CHART_YOYTREND: ${{ secrets.DATAWRAPPER_CHART_YOYTREND }}
+        run: |
+          python scripts/generateChartData.py
 
       - name: Configure git author
         run: |
@@ -34,9 +44,9 @@ jobs:
       - name: Commit & push if changed
         run: |
           # Limit to the files your script updates to avoid committing noise
-          git add usc_crime_logs.csv usc_crime_logs.json || true
+          git add data/usc_crime_logs.csv data/usc_crime_logs.json data/*.csv data/headlines.json || true
           if ! git diff --cached --quiet; then
-            git commit -m "Auto-update logs [skip ci]"
+            git commit -m "Auto-update logs and chart data [skip ci]"
             git push
           else
             echo "No changes to commit."

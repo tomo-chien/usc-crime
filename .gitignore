@@ -5,6 +5,9 @@
 # *.json
 # !requirements.txt
 
+# Datawrapper config (contains API tokens/chart IDs)
+datawrapper_config.json
+
 # Python
 __pycache__/
 *.py[cod]

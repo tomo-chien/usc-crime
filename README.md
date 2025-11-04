@@ -9,6 +9,7 @@ This project:
 - Parses and stores incident data in CSV and JSON formats
 - Generates year-over-year trend charts
 - Provides an interactive web dashboard with visualizations and searchable incident logs
+- **Automatically updates Datawrapper chart titles** when data changes
 
 ## Project Structure
 
@@ -17,7 +18,8 @@ usc-crime/
 ├── scripts/
 │   ├── daily-log.py              # Main script to fetch and parse PDFs
 │   ├── makeYoyTrendChart.py      # Generates year-over-year trend data (legacy)
-│   └── generateChartData.py      # Generates all chart CSV files
+│   ├── generateChartData.py      # Generates all chart CSV files + headlines
+│   └── updateDatawrapper.py      # Updates Datawrapper chart titles via API
 ├── web/
 │   ├── index.html                # Web dashboard
 │   ├── styles.css                # Dashboard styles
@@ -29,8 +31,10 @@ usc-crime/
 │   ├── yoyTrendChart.csv         # Weekly aggregated trend data (property vs violent)
 │   ├── mostCommonCrimes.csv      # Most common crimes (last 30 days)
 │   ├── bikeThefts.csv            # Bike/scooter thefts (monthly, last 12 months)
-│   └── partyIncidents.csv         # Party-related incidents (last 30 days)
+│   ├── partyIncidents.csv         # Party-related incidents (last 30 days)
+│   └── headlines.json            # HTML-formatted headlines for Datawrapper
 ├── requirements.txt              # Python dependencies
+├── datawrapper_config.json.example  # Example config for Datawrapper chart IDs
 └── README.md                     # This file
 ```
 
@@ -62,10 +66,47 @@ This generates CSV files for all dashboard charts:
 - `data/mostCommonCrimes.csv` - Most common crimes (last 30 days)
 - `data/bikeThefts.csv` - Monthly bike/scooter thefts (last 12 months)
 - `data/partyIncidents.csv` - Party-related incidents (last 30 days)
+- `data/headlines.json` - HTML-formatted headlines for Datawrapper
 
 4. Open `web/index.html` in a web browser to view the dashboard.
 
 **Note:** These CSV files are designed to be used with Datawrapper or other charting tools that can pull from GitHub repositories.
+
+## Datawrapper Integration
+
+The project can automatically update Datawrapper chart titles when data changes. This requires:
+
+1. **Datawrapper API Token**: Get one from [Datawrapper Account Settings](https://app.datawrapper.de/account/api-tokens)
+2. **Chart IDs**: Find these in your Datawrapper chart URLs (e.g., `https://datawrapper.dwcdn.net/abc123/` → chart ID is `abc123`)
+
+### Setup Options
+
+**Option 1: Local config file** (for local development)
+```bash
+cp datawrapper_config.json.example datawrapper_config.json
+# Edit datawrapper_config.json with your chart IDs
+export DATAWRAPPER_API_TOKEN="your_token_here"
+python scripts/generateChartData.py
+```
+
+**Option 2: Environment variables** (for GitHub Actions)
+Add these secrets to your GitHub repository:
+- `DATAWRAPPER_API_TOKEN` - Your API token
+- `DATAWRAPPER_CHART_MOSTCOMMON` - Chart ID for most common crimes
+- `DATAWRAPPER_CHART_BIKETHEFTS` - Chart ID for bike thefts
+- `DATAWRAPPER_CHART_PARTIES` - Chart ID for party incidents
+- `DATAWRAPPER_CHART_YOYTREND` - Chart ID for year-over-year trend
+
+The GitHub Actions workflow will automatically update chart titles when data changes.
+
+### CSV URLs for Datawrapper
+
+Use these GitHub raw URLs when importing CSV data in Datawrapper:
+
+- **Most Common Crimes**: `https://raw.githubusercontent.com/tomo-chien/usc-crime/main/data/mostCommonCrimes.csv`
+- **Bike Thefts**: `https://raw.githubusercontent.com/tomo-chien/usc-crime/main/data/bikeThefts.csv`
+- **Party Incidents**: `https://raw.githubusercontent.com/tomo-chien/usc-crime/main/data/partyIncidents.csv`
+- **Year-over-Year Trend**: `https://raw.githubusercontent.com/tomo-chien/usc-crime/main/data/yoyTrendChart.csv`
 
 ## Features
 
@@ -92,6 +133,14 @@ The `scripts/daily-log.py` script:
 - Deduplicates by Event # to avoid duplicates
 - Preserves existing data and only adds new incidents
 - Automatically creates the `data/` directory if it doesn't exist
+
+## Automation
+
+The project includes GitHub Actions that:
+- Run every 10 minutes to fetch new crime logs
+- Generate updated chart data and headlines
+- Automatically update Datawrapper chart titles (if configured)
+- Commit and push changes to the repository
 
 ## Notes
 
