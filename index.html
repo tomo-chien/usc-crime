@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Crime</title>
+  <link rel="icon" type="image/png" href="web/favicon.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+  <link rel="stylesheet" href="web/styles.css">
+</head>
+<body>
+  <h1>Morning, <span>Trojan.</span></h1>
+  <h2 class="subheading">Crime dashboard</h2>
+
+  <div class="tabs">
+    <button class="tab-button active" data-tab="dashboard">Dashboard</button>
+    <button class="tab-button" data-tab="allLogs">All incidents</button>
+    <button class="tab-button" data-tab="resources">Advanced resources</button>
+  </div>
+
+ 
+   <!-- Dashboard -->
+  <div id="dashboard" class="tab-content active">
+
+  <div id="yoyHeadline" class="subheadline"></div>
+  <div id="yoyTrendChart"></div>
+
+    <!-- MOST COMMON CRIME TYPES -->
+    <div id="mcHeadline" class="subheadline"></div>
+    <div id="mcChart"></div>
+
+    <!-- BIKE/SCOOTER/SKATEBOARD THEFT -->
+    <div id="bikeHeadline" class="subheadline"></div>
+    <div id="bikeChart"></div>
+
+    <!-- PARTIES -->
+    <div id="partyHeadline" class="subheadline"></div>
+    <div id="partyChart"></div>
+  </div>
+
+  <!-- Logs -->
+  <div id="allLogs" class="tab-content">
+    <p id="dateRangeNote" style="font-size:14px;color:#555;margin-bottom:10px;"></p>
+    <div class="filters">
+      <label><input type="checkbox" id="logsOnCampus"> On campus only</label>
+    </div>
+    <div class="table-container">
+      <input type="text" id="searchAll" placeholder="Search logs..." autocomplete="off">
+      <table id="logsTableAll"></table>
+    </div>
+    <button id="loadMoreAll">Load more</button>
+  </div>
+
+  <!-- Advanced resources -->
+  <div id="resources" class="tab-content">
+    <h3>Download Data</h3>
+    <p>You can download the full dataset in different formats:</p>
+    <button id="downloadCSV">Download CSV</button>
+    <button id="downloadJSON">Download JSON</button>
+
+    <hr style="margin:24px 0; border:none; border-top:1px solid #eee;">
+
+    <h3>Advanced search functions</h3>
+    <p>The search box in the "All incidents" tab supports powerful filters.</p>
+
+    <div class="adv-help">
+      <h4>Parameters</h4>
+      <ul class="paramlist">
+        <li>
+          <strong>Exact phrase</strong>: wrap in quotes.<br>
+          <code>"multi-word value"</code>
+        </li>
+        <li>
+          <strong>Column filter</strong>: <br> <code>in:(Column) value</code> or <code>in:(Column) "multi-word value"</code><br>
+        </li>
+        <li>
+          <strong>Date range</strong><br>
+          <code>from:(MM/DD/YYYY to MM/DD/YYYY)</code>
+        </li>
+        <li>
+          <strong>Date after / before</strong><br>
+          <code>after:MM/DD/YYYY</code> &nbsp; <code>before:MM/DD/YYYY</code>
+        </li>
+        <li>
+          <strong>Logic</strong>: use <code>and</code> / <code>or</code> between terms.
+        </li>
+      </ul>
+
+      <h4>Examples</h4>
+      <ul class="examplelist">
+        <li>
+          All incidents on campus:<br>
+          <code>in:(Location) "on campus"</code>
+        </li>
+        <li>
+          Robberies in September 2024:<br>
+          <code>in:(Offense) robbery and from:(09/01/2024 to 09/30/2024)</code>
+        </li>
+        <li>
+          Noise complaints on frat row<br>
+          <code>in:(Location) "900 Block Of 28TH ST" or "800 Block Of 28TH ST" or "700 Block Of 28TH ST" or "600 Block Of 28TH ST" and in:(Final Incident) "Loud and Raucous Noise"</code>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
+

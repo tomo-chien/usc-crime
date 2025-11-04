@@ -1,8 +1,9 @@
-# Data files (generated from PDFs)
-data/
-*.csv
-*.json
-!requirements.txt
+# Data files (generated from PDFs) - but allow them for GitHub Pages
+# Uncomment below if you want to exclude data files from git
+# data/
+# *.csv
+# *.json
+# !requirements.txt
 
 # Python
 __pycache__/
