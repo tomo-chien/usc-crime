@@ -264,7 +264,7 @@ async function loadLogs() {
   renderTable(true);
 
   // --- DASHBOARD MODULES ---
-  buildYoYTrendChart();
+  buildYoYTrendHeadline();     // Only headline, chart is Datawrapper iframe
   buildMostCommonChart();     // all-time most common types
   buildBikeTheftChart();      // 12-month line + last-30 headline
   buildPartiesChart();        // last-30 bars + headline
