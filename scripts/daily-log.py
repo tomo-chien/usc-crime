@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# backfill.py — incremental updater for USC DPS daily PDFs
+# daily-log.py — incremental updater for USC DPS daily PDFs
 # - Reads usc_crime_logs.csv to find the latest date
 # - Checks one PDF per day from the LATEST DATE IN CSV through TODAY (inclusive)
 # - Adds ONLY new rows (by unique Event # when present) to CSV and JSON, newest-first
@@ -24,11 +24,12 @@ import requests
 import pdfplumber
 
 # --------------------------------------------------------------------
-# Configuration (point explicitly to root-level files)
+# Configuration (point to data/ folder)
 # --------------------------------------------------------------------
-BASE_DIR = Path(__file__).resolve().parent
-CSV_FILE = BASE_DIR / "usc_crime_logs.csv"
-JSON_FILE = BASE_DIR / "usc_crime_logs.json"
+BASE_DIR = Path(__file__).resolve().parent.parent
+DATA_DIR = BASE_DIR / "data"
+CSV_FILE = DATA_DIR / "usc_crime_logs.csv"
+JSON_FILE = DATA_DIR / "usc_crime_logs.json"
 
 # If no CSV exists yet, earliest date to backfill from:
 EARLIEST_DATE = date(2023, 12, 4)
@@ -182,12 +183,16 @@ def fetch_and_parse(d: date) -> Tuple[date, List[List[str]]]:
         return d, []
 
 def write_csv(all_rows: List[List[str]]):
+    # Ensure data directory exists
+    DATA_DIR.mkdir(exist_ok=True)
     with CSV_FILE.open("w", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
         writer.writerow(HEADERS)
         writer.writerows(all_rows)
 
 def write_json(all_rows: List[List[str]]):
+    # Ensure data directory exists
+    DATA_DIR.mkdir(exist_ok=True)
     data = [
         {HEADERS[i]: (row[i] if i < len(row) else "") for i in range(len(HEADERS))}
         for row in all_rows
@@ -206,6 +211,7 @@ def backfill_incremental(workers: int = 12):
 
     # Ensure CSV exists with header if not present
     if not csv_exists:
+        DATA_DIR.mkdir(exist_ok=True)
         with CSV_FILE.open("w", newline="", encoding="utf-8") as f:
             csv.writer(f).writerow(HEADERS)
 
@@ -288,3 +294,4 @@ def backfill_incremental(workers: int = 12):
 
 if __name__ == "__main__":
     backfill_incremental(workers=12)
+

@@ -1,0 +1,129 @@
+body { font-family: Arial, sans-serif; margin: 20px; color: #222; background: #fff; }
+h1 { font-size: 24px; font-weight: bold; margin-bottom: 5px; }
+h1 span { color: #ac2124; }
+h2.subheading { font-size: 14px; color: #555; margin-bottom: 20px; font-style: italic; }
+.tabs { margin-bottom: 15px; }
+.tab-button { padding: 10px 16px; margin-right: 5px; border: none; background: #ddd; cursor: pointer; border-radius: 6px 6px 0 0; }
+.tab-button.active { background: #ac2124; color: #fff; }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+.filters { margin-bottom: 10px; }
+.filters label { margin-right: 15px; }
+input[type="date"] { padding: 6px; border: 1px solid #ccc; border-radius: 4px; margin-right: 5px; }
+.table-container { overflow-x: auto; max-width: 100%; }
+#searchAll {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px;
+  margin: 0 0 10px 0;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+table { border-collapse: collapse; width: 100%; font-size: 12px; table-layout: fixed; }
+thead { background-color: #ac2124; color: #fff; position: sticky; top: 0; z-index: 2; }
+th, td { border: 1px solid #ddd; padding: 6px; text-align: left; white-space: normal; word-wrap: break-word; overflow-wrap: break-word; }
+tr:nth-child(even) { background: #f9f9f9; }
+tbody tr:hover { background: #f1f1f1; }
+#loadMoreAll { display: block; margin: 20px auto; padding: 10px 18px; border: none; background: #ac2124; color: #fff; font-size: 14px; border-radius: 25px; cursor: pointer; }
+#loadMoreAll:hover { background: #800000; transform: scale(1.05); }
+#loadMoreAll:active { transform: scale(0.95); }
+#categoryChart { max-width: 800px; margin: 20px auto 0 auto; }
+#crimeHeadline { text-align: center; font-size: 30px; font-weight: 800; line-height: 1.35; margin: 24px auto;}
+#crimeHeadline span { color: inherit; }   /* override any old rule */
+#crimeHeadline .pct { color: #ac2124; font-weight: 900; }
+#crimeHeadline .trend-word { font-weight: 800; }
+#yoyTrendChart { max-width: 1300px; margin: 14px auto 0; }
+
+#categoryHeadline { text-align: center; font-size: 16px; font-weight: 700; margin: 10px auto 6px auto; }
+#dashFilters { display: flex; justify-content: center; gap: 14px; margin-bottom: 6px; }
+#dashFilters label { margin-right: 0; }
+
+#mcChart,#bikeChart,#partyChart{ max-width:800px; margin:10px auto 0; }
+
+/* Match main headline size/weight for all subheadlines */
+.subheadline { text-align: center; font-size: 28px; font-weight: 800; line-height: 1.35; margin: 24px auto 12px; }
+@media (max-width: 768px) { .subheadline { font-size: 20px; } }
+
+/* Any headline variable */
+.pct, .var { color: #ac2124; font-weight: 900; }
+
+.adv-help code {
+  background: #f6f6f6; padding: 2px 6px; border-radius: 4px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+}
+.paramlist, .examplelist { margin: 8px 0 16px 18px; }
+.paramlist li, .examplelist li { margin: 8px 0; }
+.adv-help .note { color:#666; font-size:12px; margin-left:6px; }
+.adv-help .notes { color:#555; font-size:13px; }
+
+@media (max-width: 768px) {
+  #crimeHeadline { font-size: 20px; }
+}
+
+#trendChart { max-width: 800px; margin: 20px auto 0 auto; }
+
+/* Advanced resources */
+#resources button {
+  margin: 5px 10px 10px 0;
+  padding: 10px 16px;
+  border: none;
+  background: #ac2124;
+  color: #fff;
+  font-size: 14px;
+  border-radius: 6px;
+  cursor: button;
+}
+#resources button:hover { background: #800000; }
+
+/* Mobile cards */
+@media (max-width: 768px) {
+  body { margin: 10px; font-size: 14px; overflow-x: hidden; }
+  h1 { font-size: 20px; }
+  .tab-button { flex: 1; font-size: 14px; padding: 8px; }
+  table { font-size: 11px; width: 100%; max-width: 100%; border-collapse: separate; }
+  table thead { display: none; }
+  table, table tbody, table tr, table td { display: block; width: 100%; max-width: 100%; box-sizing: border-box; }
+  table tr { margin-bottom: 16px; padding: 12px 14px; border-radius: 12px; background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.08); cursor:pointer; transition: all 0.3s ease; }
+  table td { text-align: left; padding: 6px 0; border: none; font-size: 13px; }
+  .extra-fields { max-height:0; overflow:hidden; transition:max-height 0.3s ease; }
+  tr.expanded .extra-fields { max-height:500px; margin-top:10px; }
+
+   /* Charts should scale fully to the container */
+  #yoyTrendChart, #mcChart, #bikeChart, #partyChart {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  /* ApexCharts SVG/canvas can shrink on mobile */
+  .apexcharts-canvas, .apexcharts-svg, .apexcharts-inner {
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+
+  /* Horizontal scrolling feels natural on iOS */
+  .table-container {
+    -webkit-overflow-scrolling: touch;
+  }
+ .tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .tab-button {
+    width: 100%;
+    border-radius: 10px;
+  }
+
+  /* Dashboard goes first and spans both columns */
+  .tab-button[data-tab="dashboard"] {
+    order: 1;
+    grid-column: 1 / -1;
+  }
+
+  /* Other two go beneath, side by side */
+  .tab-button[data-tab="allLogs"]   { order: 2; }
+  .tab-button[data-tab="resources"] { order: 3; }
+}
+
