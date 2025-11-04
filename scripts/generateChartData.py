@@ -531,9 +531,6 @@ def main():
     headlines = generate_headlines(df.copy())
     save_headlines(headlines)
     
-    # Optionally update Datawrapper charts via API
-    update_datawrapper_charts(headlines)
-    
     print("\n✨ All chart CSVs and headlines generated successfully!")
 
 
