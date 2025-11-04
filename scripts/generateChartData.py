@@ -6,6 +6,7 @@ Replicates the keyword matching logic from the JavaScript dashboard.
 
 import pandas as pd
 import re
+import json
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -283,6 +284,104 @@ def generate_yoy_trend_chart(df):
     print(f"✅ Generated {output_file} ({len(result_df)} weeks)")
 
 
+def generate_headlines(df):
+    """Generate HTML-formatted headlines for Datawrapper charts."""
+    df["Date From Parsed"] = df["Date From"].apply(parse_date)
+    df = df.dropna(subset=["Date From Parsed"])
+    
+    if df.empty:
+        return {}
+    
+    latest_date = df["Date From Parsed"].max()
+    start_date_30d = latest_date - timedelta(days=29)
+    
+    # Filter to last 30 days
+    df_30d = df[(df["Date From Parsed"] >= start_date_30d) & (df["Date From Parsed"] <= latest_date)]
+    
+    headlines = {}
+    
+    # 1. Most Common Crimes headline
+    counts = {}
+    for label, patterns in MOST_COMMON_QUERIES.items():
+        count = df_30d[df_30d.apply(lambda row: matches_offense_pattern(row, patterns), axis=1)].shape[0]
+        counts[label] = count
+    
+    max_count = max(counts.values()) if counts else 0
+    leaders = [label for label, count in counts.items() if count == max_count] if counts else []
+    
+    if leaders:
+        # Lowercase first letter (matching JS lcFirst function)
+        leader_text = leaders[0][0].lower() + leaders[0][1:] if len(leaders[0]) > 0 else leaders[0].lower()
+        if len(leaders) > 1:
+            leader_text += " (tie)"
+        headlines["mostCommon"] = f'In the last 30 days, the most common crime was <span style="color: #ac2124; font-weight: 900;">{leader_text}</span>.'
+    else:
+        headlines["mostCommon"] = "No data available."
+    
+    # 2. Bike Thefts headline
+    bike_df = df[df.apply(lambda row: matches_offense_pattern(row, BIKE_PATTERNS), axis=1)]
+    bike_30d = bike_df[
+        (bike_df["Date From Parsed"] >= start_date_30d) & 
+        (bike_df["Date From Parsed"] <= latest_date)
+    ]
+    bike_count = len(bike_30d)
+    headlines["bikeThefts"] = f'There were <span style="color: #ac2124; font-weight: 900;">{bike_count}</span> bikes, scooters, and skateboards reported stolen.'
+    
+    # 3. Party Incidents headline
+    party_counts = {}
+    for label, patterns in PARTY_QUERIES.items():
+        count = df_30d[df_30d.apply(lambda row: matches_final_incident_pattern(row, patterns), axis=1)].shape[0]
+        party_counts[label] = count
+    
+    shut_down = party_counts.get("Party shut down", 0)
+    noise = party_counts.get("Noise complaint", 0)
+    party_plural = "party" if shut_down == 1 else "parties"
+    noise_plural = "noise complaint" if noise == 1 else "noise complaints"
+    headlines["parties"] = f'DPS shut down <span style="color: #ac2124; font-weight: 900;">{shut_down}</span> {party_plural} and logged <span style="color: #ac2124; font-weight: 900;">{noise}</span> {noise_plural}.'
+    
+    # 4. Year-over-year headline
+    def categorize(row):
+        offense = str(row.get("Offense", "")).upper()
+        if any(p in offense for p in PROPERTY_PATTERNS):
+            return "Property"
+        elif any(p in offense for p in VIOLENT_PATTERNS):
+            return "Violent"
+        return None
+    
+    df_categorized = df.copy()
+    df_categorized["Category"] = df_categorized.apply(categorize, axis=1)
+    df_categorized = df_categorized[df_categorized["Category"].notna()].copy()
+    
+    start_prev = start_date_30d - timedelta(days=365)
+    end_prev = latest_date - timedelta(days=365)
+    
+    curr_total = len(df_categorized[
+        (df_categorized["Date From Parsed"] >= start_date_30d) & 
+        (df_categorized["Date From Parsed"] <= latest_date)
+    ])
+    prev_total = len(df_categorized[
+        (df_categorized["Date From Parsed"] >= start_prev) & 
+        (df_categorized["Date From Parsed"] <= end_prev)
+    ])
+    
+    if prev_total > 0:
+        pct = round(((curr_total - prev_total) / prev_total) * 100)
+        word = "up" if pct >= 0 else "down"
+        headlines["yoyTrend"] = f'Reported crimes are <span style="font-weight: 800;">{word}</span> <span style="color: #ac2124; font-weight: 900;">{abs(pct)}%</span> compared to this time last year.'
+    else:
+        headlines["yoyTrend"] = "Not enough data for a year-over-year comparison."
+    
+    return headlines
+
+
+def save_headlines(headlines):
+    """Save headlines to JSON file."""
+    output_file = DATA_DIR / "headlines.json"
+    with open(output_file, "w", encoding="utf-8") as f:
+        json.dump(headlines, f, indent=2)
+    print(f"✅ Generated {output_file}")
+
+
 def main():
     """Generate all chart CSV files."""
     DATA_DIR.mkdir(exist_ok=True)
@@ -301,7 +400,11 @@ def main():
     generate_parties_chart(df.copy())
     generate_yoy_trend_chart(df.copy())
     
-    print("\n✨ All chart CSVs generated successfully!")
+    print("\n📝 Generating headlines...")
+    headlines = generate_headlines(df.copy())
+    save_headlines(headlines)
+    
+    print("\n✨ All chart CSVs and headlines generated successfully!")
 
 
 if __name__ == "__main__":
