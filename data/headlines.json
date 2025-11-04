@@ -1,6 +1,6 @@
 {
-  "mostCommon": "In the last 30 days, the most common crime was <span style=\"color: #ac2124; font-weight: 900;\">theft</span>.",
-  "bikeThefts": "There were <span style=\"color: #ac2124; font-weight: 900;\">11</span> bikes, scooters, and skateboards reported stolen.",
+  "mostCommon": "In the last 30 days, the most common crime was <span style=\"color: #ac2124; font-weight: 900;\">assault (tie)</span>.",
+  "bikeThefts": "There were <span style=\"color: #ac2124; font-weight: 900;\">0</span> bikes, scooters, and skateboards reported stolen.",
   "parties": "DPS shut down <span style=\"color: #ac2124; font-weight: 900;\">0</span> parties and logged <span style=\"color: #ac2124; font-weight: 900;\">0</span> noise complaints.",
-  "yoyTrend": "Reported crimes are <span style=\"font-weight: 800;\">up</span> <span style=\"color: #ac2124; font-weight: 900;\">32%</span> compared to this time last year."
+  "yoyTrend": "Not enough data for a year-over-year comparison."
 }
