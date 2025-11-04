@@ -523,28 +523,18 @@ function buildPartiesChart(){
 }
 
 
-function buildYoYTrendChart() {
+function buildYoYTrendHeadline() {
+  // Only generate headline, chart is now Datawrapper iframe
   const headlineEl = document.getElementById("yoyHeadline");
-  const chartEl = document.getElementById("yoyTrendChart");
-  if (!headlineEl || !chartEl) return;
+  if (!headlineEl) return;
   if (!logsData || !logsData.length) {
     headlineEl.textContent = "No data available.";
-    chartEl.innerHTML = "";
     return;
   }
 
   const toStartOfDay = d => new Date(d.getFullYear(), d.getMonth(), d.getDate());
   const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
-  const weekStart = d => { const s = toStartOfDay(d); s.setDate(s.getDate() - s.getDay()); return s; };
   const inRange = (dt, s, e) => !isNaN(dt) && dt >= s && dt <= e;
-
-  const monthLabel = (ts) => {
-    const d = new Date(ts);
-    const last = latestDateFrom();
-    const base = d.toLocaleString(undefined, { month: "short" });
-    return (d.getMonth() === last.getMonth() && d.getFullYear() === last.getFullYear())
-      ? `${base} (MTD)` : base;
-  };
 
   const propTokens = parseQuery('in:(Offense) "theft" or "burglary" or "arson" or "vandalism" or "trespass"');
   const violTokens = parseQuery('in:(Offense) "robbery" or "assault" or "battery" or "rape" or "murder" or "homicide" or "kidnapping" or "carjacking"');
@@ -566,104 +556,6 @@ function buildYoYTrendChart() {
     headlineEl.innerHTML =
       `Reported crimes are <span class="trend-word">${word}</span> <span class="pct"><span>${Math.abs(pct)}</span>%</span> compared to this time last year.`;
   }
-
-  const firstMonth = new Date(endCurr.getFullYear(), endCurr.getMonth() - 15, 1);
-  const firstWeekStart = weekStart(firstMonth);
-  const lastWeekStart  = weekStart(endCurr);
-
-  const weeks = [];
-  for (let ws = new Date(firstWeekStart); ws <= lastWeekStart; ws = addDays(ws, 7)) {
-    weeks.push({ ws, we: addDays(ws, 6) });
-  }
-
-  const propSeries = [];
-  const violSeries = [];
-  weeks.forEach(({ ws, we }) => {
-    let p = 0, v = 0;
-    logsData.forEach(row => {
-      const dt = parseFromDate(row["Date From"]);
-      if (!inRange(dt, ws, we)) return;
-      if (evaluateRow(row, propTokens)) p++;
-      else if (evaluateRow(row, violTokens)) v++;
-    });
-    const x = ws.getTime();
-    propSeries.push({ x, y: p });
-    violSeries.push({ x, y: v });
-  });
-
-  const bandColor = "#ac2124";
-  const annotations = {
-    position: "front",
-    xaxis: [
-      {
-        x: startCurr.getTime(),
-        x2: endCurr.getTime(),
-        fillColor: bandColor,
-        opacity: 0.25,
-        borderColor: bandColor,
-        borderWidth: 2,
-        label: { text: "Last 30 days", style: { color: "#000", fontSize: "11px", background: "#fff",
-                 padding: { left: 6, right: 6, top: 2, bottom: 2 } } }
-      },
-      {
-        x: startPrev.getTime(),
-        x2: endPrev.getTime(),
-        fillColor: bandColor,
-        opacity: 0.12,
-        borderColor: bandColor,
-        borderWidth: 2
-      }
-    ]
-  };
-
-  // determine if the *last week* is incomplete (week-to-date)
-  const lastWeekEnd = addDays(lastWeekStart, 6);
-  const isPartialWeek = endCurr < lastWeekEnd;
-
-  // if incomplete, lower the fill opacity for just that final bar
-  if (isPartialWeek && weeks.length) {
-    const lastIdx = weeks.length - 1;
-    propSeries[lastIdx] = { ...propSeries[lastIdx], fillColor: "rgba(172,33,36,0.5)" };
-    violSeries[lastIdx] = { ...violSeries[lastIdx], fillColor: "rgba(255,204,0,0.5)" };
-  }
-
-  chartEl.innerHTML = "";
-  new ApexCharts(chartEl, {
-    chart: { type: "bar", height: 340, stacked: true, toolbar: { show: false }, zoom: { enabled: false } },
-    series: [
-      { name: "Property", data: propSeries },
-      { name: "Violent",  data: violSeries }
-    ],
-    colors: ["#ac2124", "#FFCC00"],
-    plotOptions: { bar: { columnWidth: "65%", borderRadius: 2 } },
-    dataLabels: { enabled: false },
-    xaxis: {
-      type: "datetime",
-      min: firstWeekStart.getTime(),
-      max: addDays(lastWeekStart, 6).getTime(),
-      tickAmount: 16,
-      tickPlacement: "on",
-      labels: {
-        formatter: monthLabel,
-        style: { fontSize: "12px" }
-      },
-      tooltip: { enabled: false }
-    },
-    yaxis: { min: 0, forceNiceScale: true, title: { text: "# of incidents" } },
-    legend: { position: "top" },
-    tooltip: {
-      shared: true,
-      intersect: false,
-      x: {
-        formatter: (val) => {
-          const s = new Date(val), e = addDays(s, 6);
-          const fmt = d => d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
-          return `Week of ${fmt(s)} – ${fmt(e)}`;
-        }
-      }
-    },
-    annotations
-  }).render();
 }
 
 
