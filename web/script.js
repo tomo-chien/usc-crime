@@ -684,36 +684,42 @@ function buildYoYTrendChart() {
       `Reported crimes are <span class="trend-word">${word}</span> <span class="pct"><span>${Math.abs(pct)}</span>%</span> compared to this time last year.`;
   }
 
-  // Find indices for highlighting periods
-  // Use the same week grouping logic to find which weeks match
-  const findWeekIndices = (startDate, endDate) => {
-    const indices = [];
+  // Find the week index that contains a given date
+  const findWeekIndex = (date) => {
+    const targetDate = new Date(date);
+    targetDate.setHours(0, 0, 0, 0);
     
-    // Normalize input dates
-    const start = new Date(startDate);
-    start.setHours(0, 0, 0, 0);
-    const end = new Date(endDate);
-    end.setHours(23, 59, 59, 999);
-    
-    weeks.forEach((weekKey, idx) => {
-      // Parse week key (YYYY-MM-DD format, Monday of that week)
+    for (let idx = weeks.length - 1; idx >= 0; idx--) {
+      const weekKey = weeks[idx];
       const weekStart = new Date(weekKey + 'T00:00:00');
       const weekEnd = new Date(weekStart);
       weekEnd.setDate(weekEnd.getDate() + 6);
       weekEnd.setHours(23, 59, 59, 999);
       
-      // Check if this week overlaps with the date range
-      // Week overlaps if: weekStart <= endDate AND weekEnd >= startDate
-      if (weekStart <= end && weekEnd >= start) {
-        indices.push(idx);
+      if (targetDate >= weekStart && targetDate <= weekEnd) {
+        return idx;
       }
-    });
-    return indices;
+    }
+    // If not found, return the last week index
+    return weeks.length - 1;
   };
 
-  // Use the already-normalized dates for week index finding
-  const currIndices = findWeekIndices(startCurrNorm, endCurrNorm);
-  const prevIndices = findWeekIndices(startPrevNorm, endPrevNorm);
+  // Highlight the most recent 4 bars
+  const latestWeekIdx = findWeekIndex(endCurrNorm);
+  const currStartIdx = Math.max(0, latestWeekIdx - 3); // 4 bars total: latestWeekIdx - 3, -2, -1, latestWeekIdx
+  const currIndices = [];
+  for (let i = currStartIdx; i <= latestWeekIdx && i < weeks.length; i++) {
+    currIndices.push(i);
+  }
+
+  // Highlight the 4 bars from exactly one year prior
+  // Find the week that contains the date one year before the latest week
+  const prevLatestWeekIdx = findWeekIndex(endPrevNorm);
+  const prevStartIdx = Math.max(0, prevLatestWeekIdx - 3); // 4 bars total
+  const prevIndices = [];
+  for (let i = prevStartIdx; i <= prevLatestWeekIdx && i < weeks.length; i++) {
+    prevIndices.push(i);
+  }
   
   // Create annotation ranges
   const annotations = {
