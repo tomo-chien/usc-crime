@@ -723,6 +723,8 @@ function buildYoYTrendChart() {
     // Use numeric indices with proper offset for category-based charts
     // For category charts, bars are centered at integer positions, so we need to adjust
     const currAnnotation = {
+      x: currStartIdx - 0.5,
+      x2: currEndIdx + 0.5,
       fillColor: 'rgba(172, 33, 36, 0.2)',
       opacity: 1,
       borderColor: 'rgba(172, 33, 36, 0.3)',
