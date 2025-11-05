@@ -774,13 +774,21 @@ function buildYoYTrendChart() {
   }
   
   // Debug output
+  console.log('Latest date:', latest.toISOString().split('T')[0]);
+  console.log('Current period dates:', startCurrNorm.toISOString().split('T')[0], 'to', endCurrNorm.toISOString().split('T')[0]);
+  console.log('Previous period dates:', startPrevNorm.toISOString().split('T')[0], 'to', endPrevNorm.toISOString().split('T')[0]);
+  console.log('Total weeks in chart:', weeks.length);
+  console.log('First week:', weeks[0], 'Last week:', weeks[weeks.length - 1]);
+  
   if (currIndices.length > 0) {
     console.log('Highlighting current period: weeks', Math.min(...currIndices), 'to', Math.max(...currIndices));
-    console.log('Week labels:', weekLabels.slice(Math.min(...currIndices), Math.max(...currIndices) + 1));
+    console.log('Current week keys:', currIndices.map(i => weeks[i]));
+    console.log('Current week labels:', weekLabels.slice(Math.min(...currIndices), Math.max(...currIndices) + 1));
   }
   if (prevIndices.length > 0) {
     console.log('Highlighting previous period: weeks', Math.min(...prevIndices), 'to', Math.max(...prevIndices));
-    console.log('Week labels:', weekLabels.slice(Math.min(...prevIndices), Math.max(...prevIndices) + 1));
+    console.log('Previous week keys:', prevIndices.map(i => weeks[i]));
+    console.log('Previous week labels:', weekLabels.slice(Math.min(...prevIndices), Math.max(...prevIndices) + 1));
   }
 
   // Render stacked column chart
