@@ -634,7 +634,7 @@ function buildYoYTrendChart() {
   // Headline calculation (last 30 days vs same period last year)
   // Last 30 days: from (latest - 29 days) to latest (inclusive, so 30 days total)
   const startCurr = addDays(latest, -29);
-  const endCurr = latest;
+  const endCurr = new Date(latest); // Make a copy to avoid modifying latest
   
   // Same period last year: exactly 365 days before
   const startPrev = new Date(startCurr);
@@ -689,15 +689,12 @@ function buildYoYTrendChart() {
   };
 
   // Normalize dates for comparison (set to start/end of day)
-  const startCurrNorm = new Date(startCurr);
-  startCurrNorm.setHours(0, 0, 0, 0);
-  const endCurrNorm = new Date(endCurr);
-  endCurrNorm.setHours(23, 59, 59, 999);
+  // Use start of day for start dates, end of day for end dates
+  const startCurrNorm = new Date(startCurr.getFullYear(), startCurr.getMonth(), startCurr.getDate());
+  const endCurrNorm = new Date(endCurr.getFullYear(), endCurr.getMonth(), endCurr.getDate(), 23, 59, 59, 999);
   
-  const startPrevNorm = new Date(startPrev);
-  startPrevNorm.setHours(0, 0, 0, 0);
-  const endPrevNorm = new Date(endPrev);
-  endPrevNorm.setHours(23, 59, 59, 999);
+  const startPrevNorm = new Date(startPrev.getFullYear(), startPrev.getMonth(), startPrev.getDate());
+  const endPrevNorm = new Date(endPrev.getFullYear(), endPrev.getMonth(), endPrev.getDate(), 23, 59, 59, 999);
 
   const currIndices = findWeekIndices(startCurrNorm, endCurrNorm);
   const prevIndices = findWeekIndices(startPrevNorm, endPrevNorm);
