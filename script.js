@@ -662,23 +662,45 @@ function buildYoYTrendChart() {
   }
 
   // Find indices for highlighting periods
+  // Use the same week grouping logic to find which weeks match
   const findWeekIndices = (startDate, endDate) => {
     const indices = [];
+    
+    // Normalize input dates
+    const start = new Date(startDate);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(endDate);
+    end.setHours(23, 59, 59, 999);
+    
     weeks.forEach((weekKey, idx) => {
-      const weekStart = new Date(weekKey);
+      // Parse week key (YYYY-MM-DD format, Monday of that week)
+      const weekStart = new Date(weekKey + 'T00:00:00');
       const weekEnd = new Date(weekStart);
       weekEnd.setDate(weekEnd.getDate() + 6);
+      weekEnd.setHours(23, 59, 59, 999);
       
       // Check if this week overlaps with the date range
-      if (weekStart <= endDate && weekEnd >= startDate) {
+      // Week overlaps if: weekStart <= endDate AND weekEnd >= startDate
+      if (weekStart <= end && weekEnd >= start) {
         indices.push(idx);
       }
     });
     return indices;
   };
 
-  const currIndices = findWeekIndices(startCurr, endCurr);
-  const prevIndices = findWeekIndices(startPrev, endPrev);
+  // Normalize dates for comparison (set to start/end of day)
+  const startCurrNorm = new Date(startCurr);
+  startCurrNorm.setHours(0, 0, 0, 0);
+  const endCurrNorm = new Date(endCurr);
+  endCurrNorm.setHours(23, 59, 59, 999);
+  
+  const startPrevNorm = new Date(startPrev);
+  startPrevNorm.setHours(0, 0, 0, 0);
+  const endPrevNorm = new Date(endPrev);
+  endPrevNorm.setHours(23, 59, 59, 999);
+
+  const currIndices = findWeekIndices(startCurrNorm, endCurrNorm);
+  const prevIndices = findWeekIndices(startPrevNorm, endPrevNorm);
   
   // Create annotation ranges
   const annotations = {
