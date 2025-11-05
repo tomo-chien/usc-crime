@@ -689,20 +689,29 @@ function buildYoYTrendChart() {
   if (currIndices.length > 0) {
     const currStartIdx = Math.min(...currIndices);
     const currEndIdx = Math.max(...currIndices);
+    // For category-based charts, need to add 0.5 offset for proper alignment
     annotations.xaxis.push({
-      x: currStartIdx,
-      x2: currEndIdx,
-      fillColor: 'rgba(172, 33, 36, 0.1)',
-      opacity: 0.5,
+      x: currStartIdx - 0.5,
+      x2: currEndIdx + 0.5,
+      fillColor: 'rgba(172, 33, 36, 0.15)',
+      opacity: 1,
       label: {
         text: 'Last 30 days',
         style: {
-          color: '#ac2124',
-          fontSize: '12px',
-          fontWeight: 600
+          color: '#fff',
+          background: '#ac2124',
+          fontSize: '11px',
+          fontWeight: 600,
+          padding: {
+            left: 4,
+            right: 4,
+            top: 2,
+            bottom: 2
+          }
         },
         orientation: 'horizontal',
-        position: 'top'
+        position: 'top',
+        offsetY: -10
       }
     });
   }
@@ -712,19 +721,27 @@ function buildYoYTrendChart() {
     const prevStartIdx = Math.min(...prevIndices);
     const prevEndIdx = Math.max(...prevIndices);
     annotations.xaxis.push({
-      x: prevStartIdx,
-      x2: prevEndIdx,
-      fillColor: 'rgba(255, 204, 0, 0.1)',
-      opacity: 0.5,
+      x: prevStartIdx - 0.5,
+      x2: prevEndIdx + 0.5,
+      fillColor: 'rgba(255, 204, 0, 0.15)',
+      opacity: 1,
       label: {
         text: 'Same period last year',
         style: {
-          color: '#FFCC00',
-          fontSize: '12px',
-          fontWeight: 600
+          color: '#fff',
+          background: '#FFCC00',
+          fontSize: '11px',
+          fontWeight: 600,
+          padding: {
+            left: 4,
+            right: 4,
+            top: 2,
+            bottom: 2
+          }
         },
         orientation: 'horizontal',
-        position: 'top'
+        position: 'top',
+        offsetY: -10
       }
     });
   }
