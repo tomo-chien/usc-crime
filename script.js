@@ -632,14 +632,18 @@ function buildYoYTrendChart() {
   });
 
   // Headline calculation (last 30 days vs same period last year)
+  // Last 30 days: from (latest - 29 days) to latest (inclusive, so 30 days total)
   const startCurr = addDays(latest, -29);
+  const endCurr = latest;
+  
+  // Same period last year: exactly 365 days before
   const startPrev = new Date(startCurr);
   startPrev.setFullYear(startPrev.getFullYear() - 1);
-  const endPrev = new Date(latest);
+  const endPrev = new Date(endCurr);
   endPrev.setFullYear(endPrev.getFullYear() - 1);
 
   const currTotal = filtered.filter(r => 
-    inRange(r.date, startCurr, latest) && 
+    inRange(r.date, startCurr, endCurr) && 
     (r.category === "Property" || r.category === "Violent")
   ).length;
   
