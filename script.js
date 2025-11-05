@@ -706,11 +706,13 @@ function buildYoYTrendChart() {
   if (currIndices.length > 0) {
     const currStartIdx = Math.min(...currIndices);
     const currEndIdx = Math.max(...currIndices);
-    // Use numeric indices with proper offset for category-based charts
-    // For category charts, bars are centered at integer positions, so we need to adjust
+    // Try using category labels (the week keys) instead of numeric indices
+    // For category charts, we can use the actual category strings
+    const currStartCategory = weeks[currStartIdx];
+    const currEndCategory = weeks[currEndIdx];
     const currAnnotation = {
-      x: currStartIdx - 0.5,
-      x2: currEndIdx + 0.5,
+      x: currStartCategory,
+      x2: currEndCategory,
       fillColor: 'rgba(172, 33, 36, 0.2)',
       opacity: 1,
       borderColor: 'rgba(172, 33, 36, 0.3)',
@@ -742,10 +744,12 @@ function buildYoYTrendChart() {
   if (prevIndices.length > 0) {
     const prevStartIdx = Math.min(...prevIndices);
     const prevEndIdx = Math.max(...prevIndices);
-    // Use numeric indices with proper offset for category-based charts
+    // Try using category labels (the week keys) instead of numeric indices
+    const prevStartCategory = weeks[prevStartIdx];
+    const prevEndCategory = weeks[prevEndIdx];
     const prevAnnotation = {
-      x: prevStartIdx - 0.5,
-      x2: prevEndIdx + 0.5,
+      x: prevStartCategory,
+      x2: prevEndCategory,
       fillColor: 'rgba(255, 204, 0, 0.2)',
       opacity: 1,
       borderColor: 'rgba(255, 204, 0, 0.3)',
