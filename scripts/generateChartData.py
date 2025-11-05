@@ -491,24 +491,6 @@ def save_headlines(headlines):
     print(f"✅ Generated {output_file}")
 
 
-def update_datawrapper_charts(headlines):
-    """Update Datawrapper chart titles via API (optional)."""
-    try:
-        import sys
-        from pathlib import Path
-        script_dir = Path(__file__).parent
-        sys.path.insert(0, str(script_dir))
-        from updateDatawrapper import update_all_charts, get_api_token
-        api_token = get_api_token()
-        if api_token:
-            update_all_charts(headlines, api_token)
-    except ImportError:
-        # Module not found, skip
-        pass
-    except Exception as e:
-        print(f"⚠️  Datawrapper update failed: {e}")
-
-
 def main():
     """Generate all chart CSV files."""
     DATA_DIR.mkdir(exist_ok=True)

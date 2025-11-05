@@ -688,15 +688,6 @@ function buildYoYTrendChart() {
     prevIndices.push(i);
   }
   
-  // Debug: Log the indices being used
-  console.log('=== HIGHLIGHTING DEBUG ===');
-  console.log('Total bars:', weeks.length);
-  console.log('Last bar index:', lastBarIdx);
-  console.log('Current indices (4 most recent):', currIndices);
-  console.log('Previous indices (4 bars from 52 weeks ago):', prevIndices);
-  console.log('Current annotation x:', Math.min(...currIndices) - 0.5, 'x2:', Math.max(...currIndices) + 0.5);
-  console.log('Previous annotation x:', Math.min(...prevIndices) - 0.5, 'x2:', Math.max(...prevIndices) + 0.5);
-  
   // Create annotation ranges
   const annotations = {
     xaxis: []
@@ -735,7 +726,6 @@ function buildYoYTrendChart() {
       }
     };
     annotations.xaxis.push(currAnnotation);
-    console.log('Current annotation:', currAnnotation);
   }
   
   // Highlight previous year's 30-day period
@@ -770,27 +760,6 @@ function buildYoYTrendChart() {
       }
     };
     annotations.xaxis.push(prevAnnotation);
-    console.log('Previous annotation:', prevAnnotation);
-  }
-  
-  console.log('Final annotations object:', JSON.stringify(annotations, null, 2));
-  
-  // Debug output
-  console.log('Latest date:', latest.toISOString().split('T')[0]);
-  console.log('Current period dates:', startCurrNorm.toISOString().split('T')[0], 'to', endCurrNorm.toISOString().split('T')[0]);
-  console.log('Previous period dates:', startPrevNorm.toISOString().split('T')[0], 'to', endPrevNorm.toISOString().split('T')[0]);
-  console.log('Total weeks in chart:', weeks.length);
-  console.log('First week:', weeks[0], 'Last week:', weeks[weeks.length - 1]);
-  
-  if (currIndices.length > 0) {
-    console.log('Highlighting current period: weeks', Math.min(...currIndices), 'to', Math.max(...currIndices));
-    console.log('Current week keys:', currIndices.map(i => weeks[i]));
-    console.log('Current week labels:', weekLabels.slice(Math.min(...currIndices), Math.max(...currIndices) + 1));
-  }
-  if (prevIndices.length > 0) {
-    console.log('Highlighting previous period: weeks', Math.min(...prevIndices), 'to', Math.max(...prevIndices));
-    console.log('Previous week keys:', prevIndices.map(i => weeks[i]));
-    console.log('Previous week labels:', weekLabels.slice(Math.min(...prevIndices), Math.max(...prevIndices) + 1));
   }
 
   // Render stacked column chart

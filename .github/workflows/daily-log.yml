@@ -27,14 +27,7 @@ jobs:
         run: python scripts/daily-log.py
 
       - name: Generate chart data
-        env:
-          DATAWRAPPER_API_TOKEN: ${{ secrets.DATAWRAPPER_API_TOKEN }}
-          DATAWRAPPER_CHART_MOSTCOMMON: ${{ secrets.DATAWRAPPER_CHART_MOSTCOMMON }}
-          DATAWRAPPER_CHART_BIKETHEFTS: ${{ secrets.DATAWRAPPER_CHART_BIKETHEFTS }}
-          DATAWRAPPER_CHART_PARTIES: ${{ secrets.DATAWRAPPER_CHART_PARTIES }}
-          DATAWRAPPER_CHART_YOYTREND: ${{ secrets.DATAWRAPPER_CHART_YOYTREND }}
-        run: |
-          python scripts/generateChartData.py
+        run: python scripts/generateChartData.py
 
       - name: Configure git author
         run: |
