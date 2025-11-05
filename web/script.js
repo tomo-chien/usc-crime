@@ -675,6 +675,74 @@ function buildYoYTrendChart() {
       `Reported crimes are <span class="trend-word">${word}</span> <span class="pct"><span>${Math.abs(pct)}</span>%</span> compared to this time last year.`;
   }
 
+  // Find indices for highlighting periods
+  const findWeekIndices = (startDate, endDate) => {
+    const indices = [];
+    weeks.forEach((weekKey, idx) => {
+      const weekStart = new Date(weekKey);
+      const weekEnd = new Date(weekStart);
+      weekEnd.setDate(weekEnd.getDate() + 6);
+      
+      // Check if this week overlaps with the date range
+      if (weekStart <= endDate && weekEnd >= startDate) {
+        indices.push(idx);
+      }
+    });
+    return indices;
+  };
+
+  const currIndices = findWeekIndices(startCurr, endCurr);
+  const prevIndices = findWeekIndices(startPrev, endPrev);
+  
+  // Create annotation ranges
+  const annotations = {
+    xaxis: []
+  };
+  
+  // Highlight current 30-day period
+  if (currIndices.length > 0) {
+    const currStartIdx = Math.min(...currIndices);
+    const currEndIdx = Math.max(...currIndices);
+    annotations.xaxis.push({
+      x: currStartIdx,
+      x2: currEndIdx,
+      fillColor: 'rgba(172, 33, 36, 0.1)',
+      opacity: 0.5,
+      label: {
+        text: 'Last 30 days',
+        style: {
+          color: '#ac2124',
+          fontSize: '12px',
+          fontWeight: 600
+        },
+        orientation: 'horizontal',
+        position: 'top'
+      }
+    });
+  }
+  
+  // Highlight previous year's 30-day period
+  if (prevIndices.length > 0) {
+    const prevStartIdx = Math.min(...prevIndices);
+    const prevEndIdx = Math.max(...prevIndices);
+    annotations.xaxis.push({
+      x: prevStartIdx,
+      x2: prevEndIdx,
+      fillColor: 'rgba(255, 204, 0, 0.1)',
+      opacity: 0.5,
+      label: {
+        text: 'Same period last year',
+        style: {
+          color: '#FFCC00',
+          fontSize: '12px',
+          fontWeight: 600
+        },
+        orientation: 'horizontal',
+        position: 'top'
+      }
+    });
+  }
+
   // Render stacked column chart
   container.innerHTML = "";
   new ApexCharts(container, {
@@ -709,7 +777,8 @@ function buildYoYTrendChart() {
     legend: {
       position: "top",
       horizontalAlign: "center"
-    }
+    },
+    annotations: annotations
   }).render();
 }
 
