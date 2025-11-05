@@ -811,6 +811,7 @@ function buildYoYTrendChart() {
     },
     dataLabels: { enabled: false },
     xaxis: {
+      type: 'category',
       categories: weekLabels,
       labels: { rotate: -45, style: { fontSize: "11px" } }
     },
