@@ -702,6 +702,15 @@ function buildYoYTrendChart() {
     prevIndices.push(i);
   }
   
+  // Debug: Log the indices being used
+  console.log('=== HIGHLIGHTING DEBUG ===');
+  console.log('Total bars:', weeks.length);
+  console.log('Last bar index:', lastBarIdx);
+  console.log('Current indices (4 most recent):', currIndices);
+  console.log('Previous indices (4 bars from 52 weeks ago):', prevIndices);
+  console.log('Current annotation will be from index', Math.min(...currIndices), 'to', Math.max(...currIndices));
+  console.log('Previous annotation will be from index', Math.min(...prevIndices), 'to', Math.max(...prevIndices));
+  
   // Create annotation ranges
   const annotations = {
     xaxis: []
