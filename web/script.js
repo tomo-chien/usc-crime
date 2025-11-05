@@ -633,10 +633,16 @@ function buildYoYTrendChart() {
   const propertyData = weeks.map(w => weekData[w].Property);
   const violentData = weeks.map(w => weekData[w].Violent);
   
-  // Format week labels (show month/day)
-  const weekLabels = weeks.map(w => {
+  // Format week labels - only show month start labels
+  const weekLabels = weeks.map((w, idx) => {
     const d = new Date(w);
-    return `${d.getMonth() + 1}/${d.getDate()}`;
+    const prevWeek = idx > 0 ? new Date(weeks[idx - 1]) : null;
+    
+    // Show label if it's the first week of the month or first week overall
+    if (idx === 0 || (prevWeek && d.getMonth() !== prevWeek.getMonth())) {
+      return d.toLocaleString(undefined, { month: 'short', day: 'numeric' });
+    }
+    return ''; // Empty string for weeks that aren't month starts
   });
 
   // Headline calculation (last 30 days vs same period last year)
@@ -698,7 +704,7 @@ function buildYoYTrendChart() {
     ],
     legend: {
       position: "top",
-      horizontalAlign: "right"
+      horizontalAlign: "center"
     }
   }).render();
 }
