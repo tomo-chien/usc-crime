@@ -722,9 +722,7 @@ function buildYoYTrendChart() {
     const currEndIdx = Math.max(...currIndices);
     // Use numeric indices with proper offset for category-based charts
     // For category charts, bars are centered at integer positions, so we need to adjust
-    annotations.xaxis.push({
-      x: currStartIdx - 0.5,
-      x2: currEndIdx + 0.5,
+    const currAnnotation = {
       fillColor: 'rgba(172, 33, 36, 0.2)',
       opacity: 1,
       borderColor: 'rgba(172, 33, 36, 0.3)',
@@ -747,7 +745,9 @@ function buildYoYTrendChart() {
         position: 'top',
         offsetY: -5
       }
-    });
+    };
+    annotations.xaxis.push(currAnnotation);
+    console.log('Current annotation:', currAnnotation);
   }
   
   // Highlight previous year's 30-day period
@@ -755,7 +755,7 @@ function buildYoYTrendChart() {
     const prevStartIdx = Math.min(...prevIndices);
     const prevEndIdx = Math.max(...prevIndices);
     // Use numeric indices with proper offset for category-based charts
-    annotations.xaxis.push({
+    const prevAnnotation = {
       x: prevStartIdx - 0.5,
       x2: prevEndIdx + 0.5,
       fillColor: 'rgba(255, 204, 0, 0.2)',
@@ -780,8 +780,12 @@ function buildYoYTrendChart() {
         position: 'top',
         offsetY: -5
       }
-    });
+    };
+    annotations.xaxis.push(prevAnnotation);
+    console.log('Previous annotation:', prevAnnotation);
   }
+  
+  console.log('Final annotations object:', JSON.stringify(annotations, null, 2));
   
   // Debug output
   console.log('Latest date:', latest.toISOString().split('T')[0]);
