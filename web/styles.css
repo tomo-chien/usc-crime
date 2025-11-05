@@ -535,14 +535,24 @@ tbody tr:hover {
   .extra-fields { 
     max-height: 0; 
     overflow: hidden; 
-    transition: max-height 0.3s ease; 
+    transition: max-height 0.4s ease; 
+    padding: 0;
   }
   
   tr.expanded .extra-fields { 
-    max-height: 500px; 
-    margin-top: 10px; 
-    padding-top: 10px;
-    border-top: 1px solid #f1f5f9;
+    max-height: 1000px; 
+    margin-top: 12px; 
+    padding-top: 12px;
+    border-top: 1px solid #e2e8f0;
+  }
+  
+  .extra-fields div {
+    padding: 4px 0;
+    border-bottom: 1px solid #f8fafc;
+  }
+  
+  .extra-fields div:last-child {
+    border-bottom: none;
   }
 
   /* Charts */
