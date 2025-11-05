@@ -676,23 +676,40 @@ function buildYoYTrendChart() {
   }
 
   // Find indices for highlighting periods
+  // Need to match the exact same logic used for grouping weeks
   const findWeekIndices = (startDate, endDate) => {
     const indices = [];
     weeks.forEach((weekKey, idx) => {
-      const weekStart = new Date(weekKey);
+      // Parse the week key (which is in YYYY-MM-DD format)
+      const weekStart = new Date(weekKey + 'T00:00:00');
       const weekEnd = new Date(weekStart);
       weekEnd.setDate(weekEnd.getDate() + 6);
+      weekEnd.setHours(23, 59, 59, 999);
+      
+      // Normalize dates to start of day for comparison
+      const start = new Date(startDate);
+      start.setHours(0, 0, 0, 0);
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
       
       // Check if this week overlaps with the date range
-      if (weekStart <= endDate && weekEnd >= startDate) {
+      // Week overlaps if: weekStart <= endDate AND weekEnd >= startDate
+      if (weekStart <= end && weekEnd >= start) {
         indices.push(idx);
       }
     });
     return indices;
   };
 
+  // Debug: log the date ranges
+  console.log('Current period:', startCurr.toISOString().split('T')[0], 'to', endCurr.toISOString().split('T')[0]);
+  console.log('Previous period:', startPrev.toISOString().split('T')[0], 'to', endPrev.toISOString().split('T')[0]);
+
   const currIndices = findWeekIndices(startCurr, endCurr);
   const prevIndices = findWeekIndices(startPrev, endPrev);
+  
+  console.log('Current week indices:', currIndices);
+  console.log('Previous week indices:', prevIndices);
   
   // Create annotation ranges
   const annotations = {
