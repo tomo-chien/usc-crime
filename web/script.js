@@ -684,40 +684,21 @@ function buildYoYTrendChart() {
       `Reported crimes are <span class="trend-word">${word}</span> <span class="pct"><span>${Math.abs(pct)}</span>%</span> compared to this time last year.`;
   }
 
-  // Find the week index that contains a given date
-  const findWeekIndex = (date) => {
-    const targetDate = new Date(date);
-    targetDate.setHours(0, 0, 0, 0);
-    
-    for (let idx = weeks.length - 1; idx >= 0; idx--) {
-      const weekKey = weeks[idx];
-      const weekStart = new Date(weekKey + 'T00:00:00');
-      const weekEnd = new Date(weekStart);
-      weekEnd.setDate(weekEnd.getDate() + 6);
-      weekEnd.setHours(23, 59, 59, 999);
-      
-      if (targetDate >= weekStart && targetDate <= weekEnd) {
-        return idx;
-      }
-    }
-    // If not found, return the last week index
-    return weeks.length - 1;
-  };
-
-  // Highlight the most recent 4 bars
-  const latestWeekIdx = findWeekIndex(endCurrNorm);
-  const currStartIdx = Math.max(0, latestWeekIdx - 3); // 4 bars total: latestWeekIdx - 3, -2, -1, latestWeekIdx
+  // Highlight the most recent 4 bars (last 4 bars in the chart)
+  const lastBarIdx = weeks.length - 1;
+  const currStartIdx = Math.max(0, lastBarIdx - 3); // 4 bars total: indices lastBarIdx - 3, -2, -1, lastBarIdx
   const currIndices = [];
-  for (let i = currStartIdx; i <= latestWeekIdx && i < weeks.length; i++) {
+  for (let i = currStartIdx; i <= lastBarIdx; i++) {
     currIndices.push(i);
   }
 
-  // Highlight the 4 bars from exactly one year prior
-  // Find the week that contains the date one year before the latest week
-  const prevLatestWeekIdx = findWeekIndex(endPrevNorm);
-  const prevStartIdx = Math.max(0, prevLatestWeekIdx - 3); // 4 bars total
+  // Highlight the 4 bars from approximately one year prior (52 weeks ago)
+  // Since there are ~52 weeks in a year, go back 52 weeks from the last bar
+  const weeksPerYear = 52;
+  const prevLastBarIdx = Math.max(0, lastBarIdx - weeksPerYear);
+  const prevStartIdx = Math.max(0, prevLastBarIdx - 3); // 4 bars total
   const prevIndices = [];
-  for (let i = prevStartIdx; i <= prevLatestWeekIdx && i < weeks.length; i++) {
+  for (let i = prevStartIdx; i <= prevLastBarIdx && i < weeks.length; i++) {
     prevIndices.push(i);
   }
   
