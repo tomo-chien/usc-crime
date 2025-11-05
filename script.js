@@ -1,6 +1,3 @@
-// This file is a copy of web/script.js with updated paths for root-level serving
-// It uses "data/" instead of "../data/" for GitHub Pages compatibility
-
 let logsData = [], filteredData = [], rowsShown = 0;
 const rowsPerPage = 50;
 
@@ -227,24 +224,38 @@ function renderTable(reset=false) {
     const tr=document.createElement("tr");
 
     if(window.innerWidth<=768){
-      // Mobile summary
-      const summaryFields=["Date Reported","Final Incident","Location"];
-      summaryFields.forEach(col=>{
+      // Mobile card view - show all fields in a card that unfolds
+      const primaryFields=["Date Reported","Final Incident","Location"];
+      const secondaryFields=["Offense","Date From","Disposition","Event #"];
+      
+      // Primary fields (always visible)
+      primaryFields.forEach(col=>{
         const td=document.createElement("td");
         td.textContent=row[col]||"";
+        td.setAttribute("data-label",col);
         tr.appendChild(td);
       });
 
+      // Extra fields (unfold on click)
       const extra=document.createElement("div");
       extra.classList.add("extra-fields");
       Object.keys(row).forEach(col=>{
-        if(summaryFields.includes(col)||col==="URL")return;
+        if(primaryFields.includes(col)||col==="URL")return;
         const div=document.createElement("div");
-        div.textContent=col+": "+(row[col]||"");
+        div.classList.add("field-row");
+        const label=document.createElement("span");
+        label.classList.add("field-label");
+        label.textContent=col+": ";
+        const value=document.createElement("span");
+        value.classList.add("field-value");
+        value.textContent=row[col]||"";
+        div.appendChild(label);
+        div.appendChild(value);
         extra.appendChild(div);
       });
       tr.appendChild(extra);
 
+      // Add click handler to unfold
       tr.addEventListener("click",()=>{tr.classList.toggle("expanded");});
 
     } else {
@@ -275,7 +286,6 @@ function renderTable(reset=false) {
 
 async function loadLogs() {
   // Add cache-busting parameter to ensure fresh data
-  // Use root-level data path for GitHub Pages
   const response = await fetch("data/usc_crime_logs.json?" + new Date().getTime());
   logsData = await response.json();
 
@@ -602,10 +612,10 @@ function buildYoYTrendChart() {
   const weekData = {};
   filtered.forEach(({ date, category }) => {
     const weekStart = new Date(date);
+    weekStart.setHours(0, 0, 0, 0);
     const dayOfWeek = weekStart.getDay();
     const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
     weekStart.setDate(weekStart.getDate() - daysToMonday);
-    weekStart.setHours(0, 0, 0, 0);
     
     const weekKey = weekStart.toISOString().split('T')[0];
     if (!weekData[weekKey]) {
@@ -837,14 +847,14 @@ const btnCSV = document.getElementById('downloadCSV');
 const btnJSON = document.getElementById('downloadJSON');
 
 if (btnCSV) {
-  btnCSV.addEventListener('click', () =>
-    downloadFile('data/usc_crime_logs.csv', 'usc_crime_logs.csv', 'text/csv;charset=utf-8')
-  );
+  btnCSV.addEventListener('click', () => {
+    downloadFile('data/usc_crime_logs.csv', 'usc_crime_logs.csv', 'text/csv;charset=utf-8');
+  });
 }
 if (btnJSON) {
-  btnJSON.addEventListener('click', () =>
-    downloadFile('data/usc_crime_logs.json', 'usc_crime_logs.json', 'application/json;charset=utf-8')
-  );
+  btnJSON.addEventListener('click', () => {
+    downloadFile('data/usc_crime_logs.json', 'usc_crime_logs.json', 'application/json;charset=utf-8');
+  });
 }
 
 

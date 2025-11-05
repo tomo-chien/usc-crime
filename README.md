@@ -17,11 +17,10 @@ usc-crime/
 ├── scripts/
 │   ├── daily-log.py              # Main script to fetch and parse PDFs
 │   └── generateChartData.py      # Generates all chart CSV files + headlines
-├── web/
-│   ├── index.html                # Web dashboard
-│   ├── styles.css                # Dashboard styles
-│   ├── script.js                 # Dashboard JavaScript
-│   └── favicon.png               # Site icon
+├── index.html                    # Web dashboard
+├── styles.css                    # Dashboard styles
+├── script.js                     # Dashboard JavaScript
+├── favicon.png                   # Site icon
 ├── data/                          # Generated data files (gitignored)
 │   ├── usc_crime_logs.csv        # Full incident data (CSV)
 │   ├── usc_crime_logs.json      # Full incident data (JSON)
@@ -64,7 +63,7 @@ This generates CSV files for all dashboard charts:
 - `data/partyIncidents.csv` - Party-related incidents (last 30 days)
 - `data/headlines.json` - HTML-formatted headlines for Datawrapper
 
-4. Open `web/index.html` in a web browser to view the dashboard.
+4. Open `index.html` in a web browser to view the dashboard.
 
 **Note:** These CSV files can be used with Datawrapper or other charting tools that can pull from GitHub repositories.
 
