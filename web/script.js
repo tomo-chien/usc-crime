@@ -197,6 +197,7 @@ function renderTable(reset=false) {
       summaryFields.forEach(col=>{
         const td=document.createElement("td");
         td.textContent=row[col]||"";
+        td.setAttribute("data-label",col);
         tr.appendChild(td);
       });
 
@@ -205,7 +206,17 @@ function renderTable(reset=false) {
       Object.keys(row).forEach(col=>{
         if(summaryFields.includes(col)||col==="URL")return;
         const div=document.createElement("div");
-        div.textContent=col+": "+(row[col]||"");
+        div.style.fontSize="12px";
+        div.style.marginBottom="6px";
+        div.style.lineHeight="1.5";
+        const label=document.createElement("strong");
+        label.textContent=col+": ";
+        label.style.color="#4a5568";
+        label.style.fontSize="11px";
+        label.style.textTransform="uppercase";
+        label.style.letterSpacing="0.5px";
+        div.appendChild(label);
+        div.appendChild(document.createTextNode(row[col]||""));
         extra.appendChild(div);
       });
       tr.appendChild(extra);

@@ -291,7 +291,14 @@ tbody tr:hover {
   color: #2d3748;
   padding: 0 16px;
 }
-@media (max-width: 768px) { .subheadline { font-size: 20px; margin: 24px auto 16px; } }
+@media (max-width: 768px) { 
+  .subheadline { 
+    font-size: 18px; 
+    margin: 20px auto 14px; 
+    padding: 0 12px;
+    line-height: 1.3;
+  } 
+}
 
 /* Any headline variable */
 .pct, .var { 
@@ -367,45 +374,62 @@ tbody tr:hover {
 
 /* Mobile cards */
 @media (max-width: 768px) {
-  body { margin: 0; padding: 16px; font-size: 14px; overflow-x: hidden; }
-  h1 { font-size: 24px; }
-  .tab-button { flex: 1; font-size: 13px; padding: 10px; }
-  table { font-size: 11px; width: 100%; max-width: 100%; border-collapse: separate; }
-  table thead { display: none; }
-  table, table tbody, table tr, table td { display: block; width: 100%; max-width: 100%; box-sizing: border-box; }
-  table tr { margin-bottom: 16px; padding: 16px; border-radius: 12px; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.1); cursor:pointer; transition: all 0.3s ease; }
-  table tr:hover {
-    box-shadow: 0 4px 12px rgba(172, 33, 36, 0.15);
+  body { 
+    margin: 0; 
+    padding: 12px; 
+    font-size: 14px; 
+    overflow-x: hidden; 
   }
-  table td { text-align: left; padding: 6px 0; border: none; font-size: 13px; }
-  .extra-fields { max-height:0; overflow:hidden; transition:max-height 0.3s ease; }
-  tr.expanded .extra-fields { max-height:500px; margin-top:10px; }
+  
+  h1 { 
+    font-size: 22px; 
+    margin-bottom: 6px;
+    line-height: 1.2;
+  }
+  
+  h2.subheading { 
+    font-size: 13px; 
+    margin-bottom: 16px; 
+  }
 
-   /* Charts should scale fully to the container */
-  #yoyTrendChart, #mcChart, #bikeChart, #partyChart {
+  /* Modal improvements */
+  .modal-content {
+    padding: 24px 20px;
+    margin: 16px;
+    max-width: calc(100% - 32px);
+  }
+  
+  .modal-content h3 {
+    font-size: 20px;
+    margin-bottom: 10px;
+  }
+  
+  .modal-content p {
+    font-size: 14px;
+    margin-bottom: 20px;
+  }
+  
+  .modal-button {
+    padding: 14px 28px;
+    font-size: 14px;
     width: 100%;
-    max-width: 100%;
+    max-width: 200px;
   }
 
-  /* ApexCharts SVG/canvas can shrink on mobile */
-  .apexcharts-canvas, .apexcharts-svg, .apexcharts-inner {
-    max-width: 100% !important;
-    width: 100% !important;
-  }
-
-  /* Horizontal scrolling feels natural on iOS */
-  .table-container {
-    -webkit-overflow-scrolling: touch;
-  }
- .tabs {
+  /* Tabs */
+  .tabs {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 8px;
+    margin-bottom: 16px;
   }
 
   .tab-button {
     width: 100%;
     border-radius: 10px;
+    font-size: 12px;
+    padding: 10px 12px;
+    min-height: 44px; /* Better touch target */
   }
 
   /* Dashboard goes first and spans both columns */
@@ -417,5 +441,202 @@ tbody tr:hover {
   /* Other two go beneath, side by side */
   .tab-button[data-tab="allLogs"]   { order: 2; }
   .tab-button[data-tab="resources"] { order: 3; }
+
+  /* Filters */
+  .filters {
+    padding: 10px;
+    margin-bottom: 12px;
+  }
+  
+  .filters label {
+    font-size: 13px;
+    display: block;
+    margin-bottom: 8px;
+  }
+
+  /* Search input */
+  #searchAll {
+    padding: 14px 16px;
+    font-size: 16px; /* Prevents zoom on iOS */
+    margin-bottom: 12px;
+    border-radius: 12px;
+  }
+
+  /* Table container */
+  .table-container {
+    padding: 12px;
+    -webkit-overflow-scrolling: touch;
+    margin: 0 -12px; /* Extend to edges on mobile */
+    border-radius: 0;
+  }
+
+  /* Table mobile card view */
+  table { 
+    font-size: 12px; 
+    width: 100%; 
+    max-width: 100%; 
+    border-collapse: separate; 
+    border-spacing: 0;
+  }
+  
+  table thead { 
+    display: none; 
+  }
+  
+  table, table tbody, table tr, table td { 
+    display: block; 
+    width: 100%; 
+    max-width: 100%; 
+    box-sizing: border-box; 
+  }
+  
+  table tr { 
+    margin-bottom: 12px; 
+    padding: 16px 12px; 
+    border-radius: 12px; 
+    background: #fff; 
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1); 
+    cursor: pointer; 
+    transition: all 0.3s ease; 
+    border: 1px solid #f1f5f9;
+  }
+  
+  table tr:hover,
+  table tr:active {
+    box-shadow: 0 4px 12px rgba(172, 33, 36, 0.15);
+    transform: translateY(-2px);
+  }
+  
+  table td { 
+    text-align: left; 
+    padding: 8px 0; 
+    border: none; 
+    font-size: 13px; 
+    line-height: 1.5;
+  }
+  
+  /* Add labels before table cells on mobile */
+  table td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: #4a5568;
+    display: block;
+    margin-bottom: 6px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  /* Hide labels for empty cells */
+  table td:empty::before {
+    display: none;
+  }
+  
+  .extra-fields { 
+    max-height: 0; 
+    overflow: hidden; 
+    transition: max-height 0.3s ease; 
+  }
+  
+  tr.expanded .extra-fields { 
+    max-height: 500px; 
+    margin-top: 10px; 
+    padding-top: 10px;
+    border-top: 1px solid #f1f5f9;
+  }
+
+  /* Charts */
+  #yoyTrendChart, #mcChart, #bikeChart, #partyChart {
+    width: 100%;
+    max-width: 100%;
+    margin: 16px auto 0;
+    padding: 12px;
+    border-radius: 10px;
+  }
+
+  /* Datawrapper iframe responsive */
+  #yoyTrendChart iframe {
+    width: 100% !important;
+    min-width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* ApexCharts responsive */
+  .apexcharts-canvas, 
+  .apexcharts-svg, 
+  .apexcharts-inner {
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+
+  /* Load more button */
+  #loadMoreAll {
+    width: 100%;
+    max-width: 100%;
+    padding: 14px 24px;
+    font-size: 15px;
+    margin: 16px 0;
+    min-height: 48px; /* Better touch target */
+  }
+
+  /* Resources section */
+  #resources {
+    padding: 16px;
+    margin: 0 -12px;
+    border-radius: 0;
+  }
+  
+  #resources h3 {
+    font-size: 18px;
+    margin-bottom: 12px;
+  }
+  
+  #resources h4 {
+    font-size: 15px;
+    margin-top: 16px;
+    margin-bottom: 8px;
+  }
+  
+  #resources button {
+    width: 100%;
+    margin: 8px 0;
+    padding: 14px 20px;
+    font-size: 15px;
+    min-height: 48px; /* Better touch target */
+  }
+  
+  #resources p {
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  
+  .adv-help code {
+    font-size: 11px;
+    padding: 3px 6px;
+    display: inline-block;
+    word-break: break-all;
+  }
+  
+  .paramlist, .examplelist {
+    margin: 8px 0 12px 12px;
+    padding-left: 8px;
+  }
+  
+  .paramlist li, .examplelist li {
+    margin: 10px 0;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
+  /* Dashboard filters */
+  #dashFilters {
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  
+  #dashFilters label {
+    margin-right: 0;
+  }
 }
 
