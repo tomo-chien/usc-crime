@@ -720,10 +720,11 @@ function buildYoYTrendChart() {
   if (currIndices.length > 0) {
     const currStartIdx = Math.min(...currIndices);
     const currEndIdx = Math.max(...currIndices);
-    // Try using numeric indices with offsets for category charts
+    // Use numeric indices with proper offset for category-based charts
+    // For category charts, bars are centered at integer positions, so we need to adjust
     annotations.xaxis.push({
-      x: currStartIdx,
-      x2: currEndIdx + 1,  // +1 to include the last bar
+      x: currStartIdx - 0.5,
+      x2: currEndIdx + 0.5,
       fillColor: 'rgba(172, 33, 36, 0.2)',
       opacity: 1,
       borderColor: 'rgba(172, 33, 36, 0.3)',
@@ -753,10 +754,10 @@ function buildYoYTrendChart() {
   if (prevIndices.length > 0) {
     const prevStartIdx = Math.min(...prevIndices);
     const prevEndIdx = Math.max(...prevIndices);
-    // Try using numeric indices with offsets for category charts
+    // Use numeric indices with proper offset for category-based charts
     annotations.xaxis.push({
-      x: prevStartIdx,
-      x2: prevEndIdx + 1,  // +1 to include the last bar
+      x: prevStartIdx - 0.5,
+      x2: prevEndIdx + 0.5,
       fillColor: 'rgba(255, 204, 0, 0.2)',
       opacity: 1,
       borderColor: 'rgba(255, 204, 0, 0.3)',
