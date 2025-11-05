@@ -706,11 +706,10 @@ function buildYoYTrendChart() {
   if (currIndices.length > 0) {
     const currStartIdx = Math.min(...currIndices);
     const currEndIdx = Math.max(...currIndices);
-    // For category-based charts, ApexCharts uses 1-based indexing for annotations
-    // Also need to adjust to center on bars: start - 0.5, end + 0.5
+    // Try using numeric indices with offsets for category charts
     annotations.xaxis.push({
-      x: currStartIdx - 0.5,
-      x2: currEndIdx + 0.5,
+      x: currStartIdx,
+      x2: currEndIdx + 1,  // +1 to include the last bar
       fillColor: 'rgba(172, 33, 36, 0.2)',
       opacity: 1,
       borderColor: 'rgba(172, 33, 36, 0.3)',
@@ -740,11 +739,10 @@ function buildYoYTrendChart() {
   if (prevIndices.length > 0) {
     const prevStartIdx = Math.min(...prevIndices);
     const prevEndIdx = Math.max(...prevIndices);
-    // For category-based charts, ApexCharts uses 1-based indexing for annotations
-    // Also need to adjust to center on bars: start - 0.5, end + 0.5
+    // Try using numeric indices with offsets for category charts
     annotations.xaxis.push({
-      x: prevStartIdx - 0.5,
-      x2: prevEndIdx + 0.5,
+      x: prevStartIdx,
+      x2: prevEndIdx + 1,  // +1 to include the last bar
       fillColor: 'rgba(255, 204, 0, 0.2)',
       opacity: 1,
       borderColor: 'rgba(255, 204, 0, 0.3)',
