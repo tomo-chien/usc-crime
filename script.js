@@ -706,13 +706,11 @@ function buildYoYTrendChart() {
   if (currIndices.length > 0) {
     const currStartIdx = Math.min(...currIndices);
     const currEndIdx = Math.max(...currIndices);
-    // Try using category labels (the week keys) instead of numeric indices
-    // For category charts, we can use the actual category strings
-    const currStartCategory = weeks[currStartIdx];
-    const currEndCategory = weeks[currEndIdx];
+    // For category charts with numeric indices, use the index directly (0-based)
+    // ApexCharts expects indices to match the categories array position
     const currAnnotation = {
-      x: currStartCategory,
-      x2: currEndCategory,
+      x: currStartIdx,
+      x2: currEndIdx,
       fillColor: 'rgba(172, 33, 36, 0.2)',
       opacity: 1,
       borderColor: 'rgba(172, 33, 36, 0.3)',
@@ -744,12 +742,10 @@ function buildYoYTrendChart() {
   if (prevIndices.length > 0) {
     const prevStartIdx = Math.min(...prevIndices);
     const prevEndIdx = Math.max(...prevIndices);
-    // Try using category labels (the week keys) instead of numeric indices
-    const prevStartCategory = weeks[prevStartIdx];
-    const prevEndCategory = weeks[prevEndIdx];
+    // For category charts with numeric indices, use the index directly (0-based)
     const prevAnnotation = {
-      x: prevStartCategory,
-      x2: prevEndCategory,
+      x: prevStartIdx,
+      x2: prevEndIdx,
       fillColor: 'rgba(255, 204, 0, 0.2)',
       opacity: 1,
       borderColor: 'rgba(255, 204, 0, 0.3)',
