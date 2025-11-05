@@ -725,12 +725,15 @@ function buildYoYTrendChart() {
   if (currIndices.length > 0) {
     const currStartIdx = Math.min(...currIndices);
     const currEndIdx = Math.max(...currIndices);
-    // For category-based charts, need to add 0.5 offset for proper alignment
+    // For category-based charts, indices are 0-based
+    // Add 0.5 offset to center the highlight between bars
     annotations.xaxis.push({
       x: currStartIdx - 0.5,
       x2: currEndIdx + 0.5,
-      fillColor: 'rgba(172, 33, 36, 0.15)',
+      fillColor: 'rgba(172, 33, 36, 0.2)',
       opacity: 1,
+      borderColor: 'rgba(172, 33, 36, 0.3)',
+      borderWidth: 1,
       label: {
         text: 'Last 30 days',
         style: {
@@ -739,15 +742,15 @@ function buildYoYTrendChart() {
           fontSize: '11px',
           fontWeight: 600,
           padding: {
-            left: 4,
-            right: 4,
-            top: 2,
-            bottom: 2
+            left: 6,
+            right: 6,
+            top: 3,
+            bottom: 3
           }
         },
         orientation: 'horizontal',
         position: 'top',
-        offsetY: -10
+        offsetY: -5
       }
     });
   }
@@ -759,8 +762,10 @@ function buildYoYTrendChart() {
     annotations.xaxis.push({
       x: prevStartIdx - 0.5,
       x2: prevEndIdx + 0.5,
-      fillColor: 'rgba(255, 204, 0, 0.15)',
+      fillColor: 'rgba(255, 204, 0, 0.2)',
       opacity: 1,
+      borderColor: 'rgba(255, 204, 0, 0.3)',
+      borderWidth: 1,
       label: {
         text: 'Same period last year',
         style: {
@@ -769,17 +774,27 @@ function buildYoYTrendChart() {
           fontSize: '11px',
           fontWeight: 600,
           padding: {
-            left: 4,
-            right: 4,
-            top: 2,
-            bottom: 2
+            left: 6,
+            right: 6,
+            top: 3,
+            bottom: 3
           }
         },
         orientation: 'horizontal',
         position: 'top',
-        offsetY: -10
+        offsetY: -5
       }
     });
+  }
+  
+  // Debug output
+  if (currIndices.length > 0) {
+    console.log('Highlighting current period: weeks', Math.min(...currIndices), 'to', Math.max(...currIndices));
+    console.log('Week labels:', weekLabels.slice(Math.min(...currIndices), Math.max(...currIndices) + 1));
+  }
+  if (prevIndices.length > 0) {
+    console.log('Highlighting previous period: weeks', Math.min(...prevIndices), 'to', Math.max(...prevIndices));
+    console.log('Week labels:', weekLabels.slice(Math.min(...prevIndices), Math.max(...prevIndices) + 1));
   }
 
   // Render stacked column chart
