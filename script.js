@@ -296,7 +296,7 @@ async function loadLogs() {
   renderTable(true);
 
   // --- DASHBOARD MODULES ---
-  buildYoYTrendHeadline();     // Only headline, chart is Datawrapper iframe
+  buildYoYTrendChart();        // Year-over-year stacked column chart
   buildMostCommonChart();     // all-time most common types
   buildBikeTheftChart();      // 12-month line + last-30 headline
   buildPartiesChart();        // last-30 bars + headline
@@ -555,30 +555,92 @@ function buildPartiesChart(){
 }
 
 
-function buildYoYTrendHeadline() {
-  // Only generate headline, chart is now Datawrapper iframe
+function buildYoYTrendChart() {
+  const container = document.getElementById("yoyTrendChart");
   const headlineEl = document.getElementById("yoyHeadline");
-  if (!headlineEl) return;
+  if (!container || !headlineEl) return;
   if (!logsData || !logsData.length) {
     headlineEl.textContent = "No data available.";
+    container.innerHTML = "";
     return;
   }
 
+  // Helper functions
   const toStartOfDay = d => new Date(d.getFullYear(), d.getMonth(), d.getDate());
   const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
   const inRange = (dt, s, e) => !isNaN(dt) && dt >= s && dt <= e;
 
-  const propTokens = parseQuery('in:(Offense) "theft" or "burglary" or "arson" or "vandalism" or "trespass"');
-  const violTokens = parseQuery('in:(Offense) "robbery" or "assault" or "battery" or "rape" or "murder" or "homicide" or "kidnapping" or "carjacking"');
-  const isReported = r => evaluateRow(r, propTokens) || evaluateRow(r, violTokens);
+  // Property vs Violent patterns (matching Python script)
+  const PROPERTY_PATTERNS = ["THEFT -", "BURGLARY -", "ARSON -", "VANDALISM -", "TRESPASS -"];
+  const VIOLENT_PATTERNS = ["ROBBERY -", "ASSAULT -", "BATTERY -", "RAPE", "MURDER", "HOMICIDE", "KIDNAPPING -", "CARJACKING"];
 
-  const endCurr = latestDateFrom();
-  const startCurr = addDays(endCurr, -29);
-  const startPrev = new Date(startCurr); startPrev.setFullYear(startPrev.getFullYear() - 1);
-  const endPrev   = new Date(endCurr);   endPrev.setFullYear(endPrev.getFullYear() - 1);
+  const categorizeOffense = (offense) => {
+    if (!offense) return null;
+    const upper = offense.toUpperCase();
+    if (PROPERTY_PATTERNS.some(p => upper.includes(p))) return "Property";
+    if (VIOLENT_PATTERNS.some(p => upper.includes(p))) return "Violent";
+    return null;
+  };
 
-  const currTotal = logsData.filter(r => inRange(parseFromDate(r["Date From"]), startCurr, endCurr) && isReported(r)).length;
-  const prevTotal = logsData.filter(r => inRange(parseFromDate(r["Date From"]), startPrev, endPrev) && isReported(r)).length;
+  // Get latest date and 13 months back
+  const latest = latestDateFrom();
+  const startDate = new Date(latest);
+  startDate.setMonth(startDate.getMonth() - 13);
+
+  // Filter to date range and categorize
+  const filtered = logsData
+    .map(r => {
+      const dt = parseFromDate(r["Date From"]);
+      if (isNaN(dt) || dt < startDate || dt > latest) return null;
+      const category = categorizeOffense(r["Offense"]);
+      if (!category) return null;
+      return { date: dt, category };
+    })
+    .filter(r => r !== null);
+
+  // Group by week (Monday start)
+  const weekData = {};
+  filtered.forEach(({ date, category }) => {
+    const weekStart = new Date(date);
+    const dayOfWeek = weekStart.getDay();
+    const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+    weekStart.setDate(weekStart.getDate() - daysToMonday);
+    weekStart.setHours(0, 0, 0, 0);
+    
+    const weekKey = weekStart.toISOString().split('T')[0];
+    if (!weekData[weekKey]) {
+      weekData[weekKey] = { Property: 0, Violent: 0 };
+    }
+    weekData[weekKey][category]++;
+  });
+
+  // Sort weeks and prepare data
+  const weeks = Object.keys(weekData).sort();
+  const propertyData = weeks.map(w => weekData[w].Property);
+  const violentData = weeks.map(w => weekData[w].Violent);
+  
+  // Format week labels (show month/day)
+  const weekLabels = weeks.map(w => {
+    const d = new Date(w);
+    return `${d.getMonth() + 1}/${d.getDate()}`;
+  });
+
+  // Headline calculation (last 30 days vs same period last year)
+  const startCurr = addDays(latest, -29);
+  const startPrev = new Date(startCurr);
+  startPrev.setFullYear(startPrev.getFullYear() - 1);
+  const endPrev = new Date(latest);
+  endPrev.setFullYear(endPrev.getFullYear() - 1);
+
+  const currTotal = filtered.filter(r => 
+    inRange(r.date, startCurr, latest) && 
+    (r.category === "Property" || r.category === "Violent")
+  ).length;
+  
+  const prevTotal = filtered.filter(r => 
+    inRange(r.date, startPrev, endPrev) && 
+    (r.category === "Property" || r.category === "Violent")
+  ).length;
 
   if (prevTotal < 1) {
     headlineEl.textContent = "Not enough data for a year-over-year comparison.";
@@ -588,6 +650,43 @@ function buildYoYTrendHeadline() {
     headlineEl.innerHTML =
       `Reported crimes are <span class="trend-word">${word}</span> <span class="pct"><span>${Math.abs(pct)}</span>%</span> compared to this time last year.`;
   }
+
+  // Render stacked column chart
+  container.innerHTML = "";
+  new ApexCharts(container, {
+    chart: {
+      type: "bar",
+      height: 400,
+      stacked: true,
+      toolbar: { show: false }
+    },
+    plotOptions: {
+      bar: {
+        horizontal: false,
+        borderRadius: 3,
+        columnWidth: "70%"
+      }
+    },
+    dataLabels: { enabled: false },
+    xaxis: {
+      categories: weekLabels,
+      labels: { rotate: -45, style: { fontSize: "11px" } }
+    },
+    yaxis: {
+      min: 0,
+      forceNiceScale: true,
+      title: { text: "# of incidents" }
+    },
+    colors: ["#ac2124", "#FFCC00"],
+    series: [
+      { name: "Property crimes", data: propertyData },
+      { name: "Violent crimes", data: violentData }
+    ],
+    legend: {
+      position: "top",
+      horizontalAlign: "right"
+    }
+  }).render();
 }
 
 

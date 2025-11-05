@@ -670,12 +670,6 @@ tbody tr:hover {
     border-radius: 10px;
   }
 
-  /* Datawrapper iframe responsive */
-  #yoyTrendChart iframe {
-    width: 100% !important;
-    min-width: 100% !important;
-    max-width: 100% !important;
-  }
 
   /* ApexCharts responsive */
   .apexcharts-canvas, 
