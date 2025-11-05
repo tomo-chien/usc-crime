@@ -694,8 +694,8 @@ function buildYoYTrendChart() {
   console.log('Last bar index:', lastBarIdx);
   console.log('Current indices (4 most recent):', currIndices);
   console.log('Previous indices (4 bars from 52 weeks ago):', prevIndices);
-  console.log('Current annotation will be from index', Math.min(...currIndices), 'to', Math.max(...currIndices));
-  console.log('Previous annotation will be from index', Math.min(...prevIndices), 'to', Math.max(...prevIndices));
+  console.log('Current annotation x:', Math.min(...currIndices) - 0.5, 'x2:', Math.max(...currIndices) + 0.5);
+  console.log('Previous annotation x:', Math.min(...prevIndices) - 0.5, 'x2:', Math.max(...prevIndices) + 0.5);
   
   // Create annotation ranges
   const annotations = {
@@ -706,10 +706,11 @@ function buildYoYTrendChart() {
   if (currIndices.length > 0) {
     const currStartIdx = Math.min(...currIndices);
     const currEndIdx = Math.max(...currIndices);
-    // For category-based charts, use 0-based indices directly
+    // For category-based charts, ApexCharts uses 1-based indexing for annotations
+    // Also need to adjust to center on bars: start - 0.5, end + 0.5
     annotations.xaxis.push({
-      x: currStartIdx,
-      x2: currEndIdx,
+      x: currStartIdx - 0.5,
+      x2: currEndIdx + 0.5,
       fillColor: 'rgba(172, 33, 36, 0.2)',
       opacity: 1,
       borderColor: 'rgba(172, 33, 36, 0.3)',
@@ -739,9 +740,11 @@ function buildYoYTrendChart() {
   if (prevIndices.length > 0) {
     const prevStartIdx = Math.min(...prevIndices);
     const prevEndIdx = Math.max(...prevIndices);
+    // For category-based charts, ApexCharts uses 1-based indexing for annotations
+    // Also need to adjust to center on bars: start - 0.5, end + 0.5
     annotations.xaxis.push({
-      x: prevStartIdx,
-      x2: prevEndIdx,
+      x: prevStartIdx - 0.5,
+      x2: prevEndIdx + 0.5,
       fillColor: 'rgba(255, 204, 0, 0.2)',
       opacity: 1,
       borderColor: 'rgba(255, 204, 0, 0.3)',
