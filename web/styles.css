@@ -105,6 +105,49 @@ h2.subheading {
   font-weight: 400;
   letter-spacing: 0.3px;
 }
+/* Hamburger menu */
+.hamburger {
+  display: none;
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 1001;
+  width: 44px;
+  height: 44px;
+  background: linear-gradient(135deg, #ac2124 0%, #d32f2f 100%);
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  padding: 0;
+  box-shadow: 0 4px 12px rgba(172, 33, 36, 0.3);
+  transition: all 0.3s ease;
+}
+
+.hamburger span {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background: #fff;
+  border-radius: 2px;
+  transition: all 0.3s ease;
+}
+
+.hamburger.active span:nth-child(1) {
+  transform: rotate(45deg) translate(6px, 6px);
+}
+
+.hamburger.active span:nth-child(2) {
+  opacity: 0;
+}
+
+.hamburger.active span:nth-child(3) {
+  transform: rotate(-45deg) translate(6px, -6px);
+}
+
 .tabs { 
   margin-bottom: 20px; 
   display: flex;
@@ -416,31 +459,56 @@ tbody tr:hover {
     max-width: 200px;
   }
 
-  /* Tabs */
+  /* Hamburger menu */
+  .hamburger {
+    display: flex;
+  }
+
+  /* Tabs - hidden by default on mobile, shown when hamburger is active */
   .tabs {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+    position: fixed;
+    top: 70px;
+    right: 16px;
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(20px);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    padding: 12px;
+    display: none;
+    flex-direction: column;
     gap: 8px;
-    margin-bottom: 16px;
+    min-width: 200px;
+    z-index: 1000;
+    transform: translateY(-10px);
+    opacity: 0;
+    transition: all 0.3s ease;
+    pointer-events: none;
+  }
+
+  .tabs.active {
+    display: flex;
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: all;
   }
 
   .tab-button {
     width: 100%;
     border-radius: 10px;
-    font-size: 12px;
-    padding: 10px 12px;
-    min-height: 44px; /* Better touch target */
+    font-size: 14px;
+    padding: 14px 16px;
+    min-height: 48px;
+    text-align: left;
+    justify-content: flex-start;
   }
 
-  /* Dashboard goes first and spans both columns */
-  .tab-button[data-tab="dashboard"] {
-    order: 1;
-    grid-column: 1 / -1;
+  /* Remove grid layout for mobile */
+  .tab-button[data-tab="dashboard"],
+  .tab-button[data-tab="allLogs"],
+  .tab-button[data-tab="resources"] {
+    order: unset;
+    grid-column: unset;
   }
-
-  /* Other two go beneath, side by side */
-  .tab-button[data-tab="allLogs"]   { order: 2; }
-  .tab-button[data-tab="resources"] { order: 3; }
 
   /* Filters */
   .filters {
@@ -492,18 +560,19 @@ tbody tr:hover {
   
   table tr { 
     margin-bottom: 12px; 
-    padding: 16px 12px; 
+    padding: 16px; 
     border-radius: 12px; 
     background: #fff; 
     box-shadow: 0 2px 8px rgba(0,0,0,0.1); 
     cursor: pointer; 
     transition: all 0.3s ease; 
     border: 1px solid #f1f5f9;
+    position: relative;
   }
   
   table tr:hover,
   table tr:active {
-    box-shadow: 0 4px 12px rgba(172, 33, 36, 0.15);
+    box-shadow: 0 4px 16px rgba(172, 33, 36, 0.2);
     transform: translateY(-2px);
   }
   
@@ -532,27 +601,64 @@ tbody tr:hover {
     display: none;
   }
   
+  /* Unfold animation for extra fields */
   .extra-fields { 
     max-height: 0; 
     overflow: hidden; 
-    transition: max-height 0.4s ease; 
+    transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), padding 0.4s ease; 
     padding: 0;
+    margin-top: 0;
   }
   
   tr.expanded .extra-fields { 
-    max-height: 1000px; 
-    margin-top: 12px; 
-    padding-top: 12px;
-    border-top: 1px solid #e2e8f0;
+    max-height: 2000px; 
+    margin-top: 16px; 
+    padding-top: 16px;
+    border-top: 2px solid #e2e8f0;
   }
   
-  .extra-fields div {
-    padding: 4px 0;
-    border-bottom: 1px solid #f8fafc;
+  .extra-fields .field-row {
+    display: flex;
+    flex-direction: column;
+    padding: 10px 0;
+    border-bottom: 1px solid #f1f5f9;
+    transition: all 0.2s ease;
   }
   
-  .extra-fields div:last-child {
+  .extra-fields .field-row:last-child {
     border-bottom: none;
+  }
+  
+  .extra-fields .field-label {
+    font-weight: 600;
+    color: #4a5568;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+    display: block;
+  }
+  
+  .extra-fields .field-value {
+    font-size: 13px;
+    color: #2d3748;
+    line-height: 1.5;
+    word-wrap: break-word;
+  }
+  
+  /* Add visual indicator for expandable cards */
+  table tr::after {
+    content: "▼";
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    color: #ac2124;
+    font-size: 12px;
+    transition: transform 0.3s ease;
+  }
+  
+  table tr.expanded::after {
+    transform: rotate(180deg);
   }
 
   /* Charts */

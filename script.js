@@ -4,6 +4,38 @@
 let logsData = [], filteredData = [], rowsShown = 0;
 const rowsPerPage = 50;
 
+// Mobile hamburger menu
+const hamburger = document.getElementById("hamburger");
+const tabs = document.getElementById("tabs");
+
+if (hamburger && tabs) {
+  hamburger.addEventListener("click", () => {
+    hamburger.classList.toggle("active");
+    tabs.classList.toggle("active");
+  });
+  
+  // Close menu when clicking a tab button on mobile
+  document.querySelectorAll(".tab-button").forEach(btn => {
+    btn.addEventListener("click", () => {
+      if (window.innerWidth <= 768) {
+        hamburger.classList.remove("active");
+        tabs.classList.remove("active");
+      }
+    });
+  });
+  
+  // Close menu when clicking outside on mobile
+  document.addEventListener("click", (e) => {
+    if (window.innerWidth <= 768 && 
+        !tabs.contains(e.target) && 
+        !hamburger.contains(e.target) &&
+        tabs.classList.contains("active")) {
+      hamburger.classList.remove("active");
+      tabs.classList.remove("active");
+    }
+  });
+}
+
 // Tabs
 document.querySelectorAll(".tab-button").forEach(btn => {
   btn.addEventListener("click", () => {

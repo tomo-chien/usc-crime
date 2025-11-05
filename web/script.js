@@ -1,6 +1,38 @@
 let logsData = [], filteredData = [], rowsShown = 0;
 const rowsPerPage = 50;
 
+// Mobile hamburger menu
+const hamburger = document.getElementById("hamburger");
+const tabs = document.getElementById("tabs");
+
+if (hamburger && tabs) {
+  hamburger.addEventListener("click", () => {
+    hamburger.classList.toggle("active");
+    tabs.classList.toggle("active");
+  });
+  
+  // Close menu when clicking a tab button on mobile
+  document.querySelectorAll(".tab-button").forEach(btn => {
+    btn.addEventListener("click", () => {
+      if (window.innerWidth <= 768) {
+        hamburger.classList.remove("active");
+        tabs.classList.remove("active");
+      }
+    });
+  });
+  
+  // Close menu when clicking outside on mobile
+  document.addEventListener("click", (e) => {
+    if (window.innerWidth <= 768 && 
+        !tabs.contains(e.target) && 
+        !hamburger.contains(e.target) &&
+        tabs.classList.contains("active")) {
+      hamburger.classList.remove("active");
+      tabs.classList.remove("active");
+    }
+  });
+}
+
 // Tabs
 document.querySelectorAll(".tab-button").forEach(btn => {
   btn.addEventListener("click", () => {
@@ -192,35 +224,38 @@ function renderTable(reset=false) {
     const tr=document.createElement("tr");
 
     if(window.innerWidth<=768){
-      // Mobile summary
-      const summaryFields=["Date Reported","Final Incident","Location"];
-      summaryFields.forEach(col=>{
+      // Mobile card view - show all fields in a card that unfolds
+      const primaryFields=["Date Reported","Final Incident","Location"];
+      const secondaryFields=["Offense","Date From","Disposition","Event #"];
+      
+      // Primary fields (always visible)
+      primaryFields.forEach(col=>{
         const td=document.createElement("td");
         td.textContent=row[col]||"";
         td.setAttribute("data-label",col);
         tr.appendChild(td);
       });
 
+      // Extra fields (unfold on click)
       const extra=document.createElement("div");
       extra.classList.add("extra-fields");
       Object.keys(row).forEach(col=>{
-        if(summaryFields.includes(col)||col==="URL")return;
+        if(primaryFields.includes(col)||col==="URL")return;
         const div=document.createElement("div");
-        div.style.fontSize="12px";
-        div.style.marginBottom="6px";
-        div.style.lineHeight="1.5";
-        const label=document.createElement("strong");
+        div.classList.add("field-row");
+        const label=document.createElement("span");
+        label.classList.add("field-label");
         label.textContent=col+": ";
-        label.style.color="#4a5568";
-        label.style.fontSize="11px";
-        label.style.textTransform="uppercase";
-        label.style.letterSpacing="0.5px";
+        const value=document.createElement("span");
+        value.classList.add("field-value");
+        value.textContent=row[col]||"";
         div.appendChild(label);
-        div.appendChild(document.createTextNode(row[col]||""));
+        div.appendChild(value);
         extra.appendChild(div);
       });
       tr.appendChild(extra);
 
+      // Add click handler to unfold
       tr.addEventListener("click",()=>{tr.classList.toggle("expanded");});
 
     } else {
