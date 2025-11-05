@@ -656,13 +656,22 @@ function buildYoYTrendChart() {
   const endPrev = new Date(endCurr);
   endPrev.setFullYear(endPrev.getFullYear() - 1);
 
+  // Normalize dates for comparison (set to start/end of day)
+  // Use start of day for start dates, end of day for end dates
+  const startCurrNorm = new Date(startCurr.getFullYear(), startCurr.getMonth(), startCurr.getDate());
+  const endCurrNorm = new Date(endCurr.getFullYear(), endCurr.getMonth(), endCurr.getDate(), 23, 59, 59, 999);
+  
+  const startPrevNorm = new Date(startPrev.getFullYear(), startPrev.getMonth(), startPrev.getDate());
+  const endPrevNorm = new Date(endPrev.getFullYear(), endPrev.getMonth(), endPrev.getDate(), 23, 59, 59, 999);
+
+  // Count incidents in the normalized date ranges
   const currTotal = filtered.filter(r => 
-    inRange(r.date, startCurr, endCurr) && 
+    inRange(r.date, startCurrNorm, endCurrNorm) && 
     (r.category === "Property" || r.category === "Violent")
   ).length;
   
   const prevTotal = filtered.filter(r => 
-    inRange(r.date, startPrev, endPrev) && 
+    inRange(r.date, startPrevNorm, endPrevNorm) && 
     (r.category === "Property" || r.category === "Violent")
   ).length;
 
@@ -702,14 +711,7 @@ function buildYoYTrendChart() {
     return indices;
   };
 
-  // Normalize dates for comparison (set to start/end of day)
-  // Use start of day for start dates, end of day for end dates
-  const startCurrNorm = new Date(startCurr.getFullYear(), startCurr.getMonth(), startCurr.getDate());
-  const endCurrNorm = new Date(endCurr.getFullYear(), endCurr.getMonth(), endCurr.getDate(), 23, 59, 59, 999);
-  
-  const startPrevNorm = new Date(startPrev.getFullYear(), startPrev.getMonth(), startPrev.getDate());
-  const endPrevNorm = new Date(endPrev.getFullYear(), endPrev.getMonth(), endPrev.getDate(), 23, 59, 59, 999);
-
+  // Use the already-normalized dates for week index finding
   const currIndices = findWeekIndices(startCurrNorm, endCurrNorm);
   const prevIndices = findWeekIndices(startPrevNorm, endPrevNorm);
   
