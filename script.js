@@ -499,7 +499,13 @@ function buildMostCommonChart() {
   container.innerHTML = "";
   const isMobile = window.innerWidth <= 768;
   new ApexCharts(container, {
-    chart: { type: "bar", height: 320, toolbar: { show: false } },
+    chart: { 
+      type: "bar", 
+      height: isMobile ? 360 : 320, 
+      toolbar: { show: false },
+      offsetX: isMobile ? 0 : 0,
+      offsetY: isMobile ? 0 : 0
+    },
     legend: { show: false },
     plotOptions: { bar: { borderRadius: 3, columnWidth: "55%", distributed: true } },
     dataLabels: { enabled: false },
@@ -508,13 +514,13 @@ function buildMostCommonChart() {
       labels: { 
         rotate: isMobile ? -45 : -30, 
         style: { fontSize: isMobile ? "10px" : "12px" },
-        maxHeight: isMobile ? 80 : undefined,
+        maxHeight: isMobile ? 100 : undefined,
         trim: false,
         hideOverlappingLabels: false
       },
       // More spacing on mobile
-      offsetX: isMobile ? -5 : 0,
-      offsetY: isMobile ? 15 : 0
+      offsetX: isMobile ? 8 : 0,
+      offsetY: isMobile ? 20 : 0
     },
     yaxis: { 
       min: 0, 
@@ -656,7 +662,13 @@ function buildPartiesChart(){
 
   const isMobile = window.innerWidth <= 768;
   new ApexCharts(document.getElementById("partyChart"), {
-    chart:{ type:"bar", height:320, toolbar:{show:false} },
+    chart:{ 
+      type:"bar", 
+      height: isMobile ? 360 : 320, 
+      toolbar:{show:false},
+      offsetX: isMobile ? 0 : 0,
+      offsetY: isMobile ? 0 : 0
+    },
     plotOptions:{ bar:{ borderRadius:3, columnWidth:"55%" } },
     dataLabels:{ enabled:false },
     xaxis:{ 
@@ -664,12 +676,12 @@ function buildPartiesChart(){
       labels:{ 
         rotate: isMobile ? -45 : -15, 
         style:{ fontSize: isMobile ? "10px" : "12px" },
-        maxHeight: isMobile ? 80 : undefined,
+        maxHeight: isMobile ? 100 : undefined,
         trim: false,
         hideOverlappingLabels: false
       },
-      offsetX: isMobile ? -5 : 0,
-      offsetY: isMobile ? 15 : 0
+      offsetX: isMobile ? 8 : 0,
+      offsetY: isMobile ? 20 : 0
     },
     yaxis:{ 
       min:0, 
@@ -941,12 +953,15 @@ function buildYoYTrendChart() {
 
   // Render stacked column chart
   container.innerHTML = "";
+  const isMobile = window.innerWidth <= 768;
   const chart = new ApexCharts(container, {
     chart: {
       type: "bar",
-      height: 400,
+      height: isMobile ? 440 : 400,
       stacked: true,
       toolbar: { show: false },
+      offsetX: isMobile ? 0 : 0,
+      offsetY: isMobile ? 0 : 0,
       events: {
         // Disable legend click functionality
         legendClick: function(chartContext, seriesIndex, config) {
@@ -991,8 +1006,8 @@ function buildYoYTrendChart() {
           return '';
         }
       },
-      offsetX: window.innerWidth <= 768 ? -10 : 0,
-      offsetY: window.innerWidth <= 768 ? 10 : 0
+      offsetX: window.innerWidth <= 768 ? 8 : 0,
+      offsetY: window.innerWidth <= 768 ? 20 : 0
     },
     yaxis: {
       min: 0,

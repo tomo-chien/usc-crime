@@ -762,17 +762,17 @@ tbody tr:hover {
 
   /* Charts */
   #yoyTrendChart, #mcChart, #bikeChart, #partyChart {
-    width: calc(100% + 32px);
-    max-width: calc(100% + 32px);
-    margin: 20px -16px 0 -16px; /* Negative margins to extend beyond body padding */
-    padding: 12px 24px 24px 24px; /* More horizontal padding to prevent cutoff */
+    width: 100%;
+    max-width: 100%;
+    margin: 20px 0 0 0;
+    padding: 12px 8px 40px 8px; /* Extra bottom padding for rotated labels */
     border-radius: 16px;
     background: #ffffff;
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-    overflow-x: auto; /* Allow horizontal scroll if needed */
+    overflow-x: visible;
     overflow-y: visible;
-    -webkit-overflow-scrolling: touch;
     box-sizing: border-box;
+    position: relative;
   }
   
   /* Extra space for chart labels on mobile */
@@ -781,9 +781,9 @@ tbody tr:hover {
   #bikeChart .apexcharts-canvas,
   #partyChart .apexcharts-canvas {
     width: 100% !important;
-    min-width: 100%;
-    padding-left: 0;
-    padding-right: 0;
+    padding-left: 12px;
+    padding-right: 12px;
+    padding-bottom: 20px;
   }
   
   /* Ensure chart containers don't cut off labels */
@@ -808,6 +808,14 @@ tbody tr:hover {
   #mcChart .apexcharts-xaxis,
   #bikeChart .apexcharts-xaxis,
   #partyChart .apexcharts-xaxis {
+    overflow: visible !important;
+  }
+  
+  /* X-axis text elements - ensure they're not clipped */
+  #yoyTrendChart .apexcharts-xaxis-texts-g text,
+  #mcChart .apexcharts-xaxis-texts-g text,
+  #bikeChart .apexcharts-xaxis-texts-g text,
+  #partyChart .apexcharts-xaxis-texts-g text {
     overflow: visible !important;
   }
   
