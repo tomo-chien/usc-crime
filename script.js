@@ -487,47 +487,34 @@ function buildBikeTheftChart(){
       ? `${base} (MTD)` : base;
   });
 
-  // Break the base series and create a transparent overlay for the final segment
-  const baseSeries = monthlyCounts.slice();
-  const overlaySeries = new Array(monthlyCounts.length).fill(null);
-
-  if (isPartialMonth && monthlyCounts.length >= 2) {
-    // remove the final point from the base so the last segment isn't drawn at full opacity
-    baseSeries[baseSeries.length - 1] = null;
-    // overlay only the connecting segment
-    overlaySeries[overlaySeries.length - 2] = monthlyCounts[monthlyCounts.length - 2];
-    overlaySeries[overlaySeries.length - 1] = monthlyCounts[monthlyCounts.length - 1];
-  }
-
   const el = document.getElementById("bikeChart");
   el.innerHTML = "";
 
-  const series = [{ name:"Thefts", data: baseSeries }];
-  if (isPartialMonth) {
-    series.push({
-      name: "Thefts (MTD)",
-      data: overlaySeries,
-      color: "rgba(172,33,36,0.4)", // same hue, more transparent
-      stroke: { width: 3, curve: "smooth" },
-      markers: { size: 3, colors: "rgba(172,33,36,0.4)", strokeColors: "rgba(172,33,36,0.4)" }
-    });
-  }
+  // Create colors array with transparent color for MTD month
+  const colors = monthlyCounts.map((count, idx) => {
+    const isMtdMonth = idx === monthlyCounts.length - 1 && isPartialMonth;
+    return isMtdMonth ? "rgba(172, 33, 36, 0.4)" : "#ac2124";
+  });
 
   new ApexCharts(el, {
-    chart:{ type:"line", height:320, toolbar:{show:false}, zoom:{enabled:false} },
-    stroke:{ width:3, curve:"smooth" },
-    markers:{ size:3 },
-    series,
-    colors: ["#ac2124", "rgba(172,33,36,0.4)"],
+    chart:{ type:"bar", height:320, toolbar:{show:false} },
+    plotOptions:{ 
+      bar:{ 
+        borderRadius:3, 
+        columnWidth:"55%",
+        distributed: true  // Use different colors for each bar
+      } 
+    },
+    series:[{ name:"Thefts", data:monthlyCounts }],
+    colors: colors,
     xaxis:{
       type:"category",
       categories,
-      tickPlacement:"on",
-      labels:{ rotate:-30, style:{ fontSize:"12px" } },
-      tooltip:{ enabled:false }
+      labels:{ rotate:-30, style:{ fontSize:"12px" } }
     },
     yaxis:{ min:0, forceNiceScale:true, title:{ text:"# of incidents" } },
-    legend:{ show:false }
+    legend:{ show:false },
+    dataLabels:{ enabled:false }
   }).render();
 }
 
@@ -628,6 +615,12 @@ function buildYoYTrendChart() {
   const weeks = Object.keys(weekData).sort();
   const propertyData = weeks.map(w => weekData[w].Property);
   const violentData = weeks.map(w => weekData[w].Violent);
+  
+  // Check if the latest week is complete (week should end on Sunday)
+  const lastWeekStart = new Date(weeks[weeks.length - 1]);
+  const lastWeekEnd = new Date(lastWeekStart);
+  lastWeekEnd.setDate(lastWeekEnd.getDate() + 6); // Add 6 days to get Sunday
+  const isLastWeekComplete = latest >= lastWeekEnd;
   
   // Format week labels - only show month start labels
   const weekLabels = weeks.map((w, idx) => {
@@ -772,6 +765,24 @@ function buildYoYTrendChart() {
     annotations.xaxis.push(prevAnnotation);
   }
 
+  // Create data arrays with transparency for incomplete last week
+  const lastWeekIdx = weeks.length - 1;
+  const isLastWeekIncomplete = !isLastWeekComplete;
+  
+  const propertyDataWithColors = propertyData.map((val, idx) => {
+    if (idx === lastWeekIdx && isLastWeekIncomplete) {
+      return { x: idx, y: val, fillColor: "rgba(172, 33, 36, 0.4)" };
+    }
+    return val;
+  });
+  
+  const violentDataWithColors = violentData.map((val, idx) => {
+    if (idx === lastWeekIdx && isLastWeekIncomplete) {
+      return { x: idx, y: val, fillColor: "rgba(255, 204, 0, 0.4)" };
+    }
+    return val;
+  });
+
   // Render stacked column chart
   container.innerHTML = "";
   new ApexCharts(container, {
@@ -801,8 +812,14 @@ function buildYoYTrendChart() {
     },
     colors: ["#ac2124", "#FFCC00"],
     series: [
-      { name: "Property crimes", data: propertyData },
-      { name: "Violent crimes", data: violentData }
+      { 
+        name: "Property crimes", 
+        data: propertyDataWithColors
+      },
+      { 
+        name: "Violent crimes", 
+        data: violentDataWithColors
+      }
     ],
     legend: {
       position: "top",
