@@ -964,7 +964,9 @@ function buildYoYTrendChart() {
       labels: { 
         rotate: window.innerWidth <= 768 ? -60 : -45, 
         style: { fontSize: window.innerWidth <= 768 ? "10px" : "11px" },
-        maxHeight: window.innerWidth <= 768 ? 80 : undefined,
+        maxHeight: window.innerWidth <= 768 ? 90 : undefined,
+        trim: false,
+        hideOverlappingLabels: false,
         // Custom formatter to show only month start labels
         formatter: function(value, timestamp, opts) {
           // opts.dataPointIndex should give us the index
