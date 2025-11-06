@@ -501,9 +501,10 @@ function buildMostCommonChart() {
   new ApexCharts(container, {
     chart: { 
       type: "bar", 
-      height: isMobile ? 360 : 320, 
+      height: isMobile ? 360 : 320,
+      width: isMobile ? container.offsetWidth - 16 : undefined, // Constrain width on mobile
       toolbar: { show: false },
-      offsetX: isMobile ? 0 : 0,
+      offsetX: isMobile ? -4 : 0,
       offsetY: isMobile ? 0 : 0
     },
     legend: { show: false },
@@ -519,7 +520,7 @@ function buildMostCommonChart() {
         hideOverlappingLabels: false
       },
       // More spacing on mobile
-      offsetX: isMobile ? 8 : 0,
+      offsetX: isMobile ? 0 : 0,
       offsetY: isMobile ? 20 : 0
     },
     yaxis: { 
@@ -587,6 +588,7 @@ function buildBikeTheftChart(){
 
   const el = document.getElementById("bikeChart");
   el.innerHTML = "";
+  const isMobile = window.innerWidth <= 768;
 
   // For line charts, we need to split into two series if MTD is partial
   // to show the last segment as transparent
@@ -613,9 +615,12 @@ function buildBikeTheftChart(){
   new ApexCharts(el, {
     chart:{ 
       type:"line", 
-      height:320, 
+      height:320,
+      width: isMobile ? el.offsetWidth - 16 : undefined, // Constrain width on mobile
       toolbar:{show:false},
-      zoom:{ enabled:false }
+      zoom:{ enabled:false },
+      offsetX: isMobile ? -4 : 0,
+      offsetY: isMobile ? 0 : 0
     },
     stroke:{
       curve:"smooth",
@@ -626,7 +631,15 @@ function buildBikeTheftChart(){
     xaxis:{
       type:"category",
       categories,
-      labels:{ rotate:-30, style:{ fontSize:"12px" } }
+      labels:{ 
+        rotate: isMobile ? -45 : -30, 
+        style:{ fontSize: isMobile ? "10px" : "12px" },
+        maxHeight: isMobile ? 80 : undefined,
+        trim: false,
+        hideOverlappingLabels: false
+      },
+      offsetX: isMobile ? 0 : 0,
+      offsetY: isMobile ? 15 : 0
     },
     yaxis:{ min:0, forceNiceScale:true, title:{ text:"# of incidents" } },
     legend:{ show:false },
@@ -661,12 +674,14 @@ function buildPartiesChart(){
 
 
   const isMobile = window.innerWidth <= 768;
-  new ApexCharts(document.getElementById("partyChart"), {
+  const partyContainer = document.getElementById("partyChart");
+  new ApexCharts(partyContainer, {
     chart:{ 
       type:"bar", 
-      height: isMobile ? 360 : 320, 
+      height: isMobile ? 360 : 320,
+      width: isMobile ? partyContainer.offsetWidth - 16 : undefined, // Constrain width on mobile
       toolbar:{show:false},
-      offsetX: isMobile ? 0 : 0,
+      offsetX: isMobile ? -4 : 0,
       offsetY: isMobile ? 0 : 0
     },
     plotOptions:{ bar:{ borderRadius:3, columnWidth:"55%" } },
@@ -958,9 +973,10 @@ function buildYoYTrendChart() {
     chart: {
       type: "bar",
       height: isMobile ? 440 : 400,
+      width: isMobile ? container.offsetWidth - 16 : undefined, // Constrain width on mobile
       stacked: true,
       toolbar: { show: false },
-      offsetX: isMobile ? 0 : 0,
+      offsetX: isMobile ? -4 : 0,
       offsetY: isMobile ? 0 : 0,
       events: {
         // Disable legend click functionality
@@ -1006,7 +1022,7 @@ function buildYoYTrendChart() {
           return '';
         }
       },
-      offsetX: window.innerWidth <= 768 ? 8 : 0,
+      offsetX: window.innerWidth <= 768 ? 0 : 0,
       offsetY: window.innerWidth <= 768 ? 20 : 0
     },
     yaxis: {

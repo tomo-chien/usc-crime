@@ -765,11 +765,11 @@ tbody tr:hover {
     width: 100%;
     max-width: 100%;
     margin: 20px 0 0 0;
-    padding: 12px 8px 40px 8px; /* Extra bottom padding for rotated labels */
+    padding: 12px 4px 40px 4px; /* Reduced horizontal padding to fit more content */
     border-radius: 16px;
     background: #ffffff;
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-    overflow-x: visible;
+    overflow-x: hidden;
     overflow-y: visible;
     box-sizing: border-box;
     position: relative;
@@ -781,8 +781,9 @@ tbody tr:hover {
   #bikeChart .apexcharts-canvas,
   #partyChart .apexcharts-canvas {
     width: 100% !important;
-    padding-left: 12px;
-    padding-right: 12px;
+    max-width: 100% !important;
+    padding-left: 4px;
+    padding-right: 4px;
     padding-bottom: 20px;
   }
   
@@ -791,8 +792,9 @@ tbody tr:hover {
   #mcChart .apexcharts-svg,
   #bikeChart .apexcharts-svg,
   #partyChart .apexcharts-svg {
-    overflow: visible !important;
+    overflow: hidden !important;
     width: 100% !important;
+    max-width: 100% !important;
   }
   
   /* Chart inner elements need space for rotated labels */
@@ -800,23 +802,9 @@ tbody tr:hover {
   #mcChart .apexcharts-inner,
   #bikeChart .apexcharts-inner,
   #partyChart .apexcharts-inner {
-    overflow: visible !important;
-  }
-  
-  /* X-axis labels need extra space */
-  #yoyTrendChart .apexcharts-xaxis,
-  #mcChart .apexcharts-xaxis,
-  #bikeChart .apexcharts-xaxis,
-  #partyChart .apexcharts-xaxis {
-    overflow: visible !important;
-  }
-  
-  /* X-axis text elements - ensure they're not clipped */
-  #yoyTrendChart .apexcharts-xaxis-texts-g text,
-  #mcChart .apexcharts-xaxis-texts-g text,
-  #bikeChart .apexcharts-xaxis-texts-g text,
-  #partyChart .apexcharts-xaxis-texts-g text {
-    overflow: visible !important;
+    overflow: hidden !important;
+    width: 100% !important;
+    max-width: 100% !important;
   }
   
 
