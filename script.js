@@ -341,10 +341,26 @@ async function loadLogs() {
   renderTable(true);
 
   // --- DASHBOARD MODULES ---
-  buildYoYTrendChart();        // Year-over-year stacked column chart
-  buildMostCommonChart();     // all-time most common types
-  buildBikeTheftChart();      // 12-month line + last-30 headline
-  buildPartiesChart();        // last-30 bars + headline
+  try {
+    buildYoYTrendChart();        // Year-over-year stacked column chart
+  } catch (error) {
+    console.error('Error building YoY trend chart:', error);
+  }
+  try {
+    buildMostCommonChart();     // all-time most common types
+  } catch (error) {
+    console.error('Error building most common chart:', error);
+  }
+  try {
+    buildBikeTheftChart();      // 12-month line + last-30 headline
+  } catch (error) {
+    console.error('Error building bike theft chart:', error);
+  }
+  try {
+    buildPartiesChart();        // last-30 bars + headline
+  } catch (error) {
+    console.error('Error building parties chart:', error);
+  }
 }
 
 
@@ -1141,28 +1157,51 @@ if (btnJSON) {
 
 
 
-  // Show warning modal on page load
-  const modal = document.getElementById('warningModal');
-  const closeBtn = document.getElementById('closeModal');
-  
-  // Check if user has dismissed before
-  if (!localStorage.getItem('warningDismissed')) {
-    modal.classList.add('show');
-  }
-  
-  closeBtn.addEventListener('click', () => {
-    modal.classList.remove('show');
-    localStorage.setItem('warningDismissed', 'true');
-  });
-  
-  // Close modal when clicking outside
-  modal.addEventListener('click', (e) => {
-    if (e.target === modal) {
-      modal.classList.remove('show');
-      localStorage.setItem('warningDismissed', 'true');
+  // Initialize when DOM is ready
+  function init() {
+    // Show warning modal on page load
+    const modal = document.getElementById('warningModal');
+    const closeBtn = document.getElementById('closeModal');
+    
+    if (modal && closeBtn) {
+      // Check if user has dismissed before
+      if (!localStorage.getItem('warningDismissed')) {
+        modal.classList.add('show');
+      }
+      
+      closeBtn.addEventListener('click', () => {
+        modal.classList.remove('show');
+        localStorage.setItem('warningDismissed', 'true');
+      });
+      
+      // Close modal when clicking outside
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          modal.classList.remove('show');
+          localStorage.setItem('warningDismissed', 'true');
+        }
+      });
     }
-  });
 
-  // Init
-  loadLogs();
+    // Check if ApexCharts is loaded
+    if (typeof ApexCharts === 'undefined') {
+      console.error('ApexCharts is not loaded');
+      return;
+    }
+
+    // Init
+    try {
+      loadLogs();
+    } catch (error) {
+      console.error('Error loading logs:', error);
+    }
+  }
+
+  // Run when DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    // DOM is already ready
+    init();
+  }
 
