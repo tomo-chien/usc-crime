@@ -930,8 +930,8 @@ footer p {
 }
 
 footer a {
-  color: #718096;
-  text-decoration: none;
+  color: #ac2124;
+  text-decoration: underline;
 }
 
 footer a:hover {
