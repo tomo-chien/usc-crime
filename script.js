@@ -416,7 +416,14 @@ async function loadLogs() {
 
   // Search box
   document.getElementById("searchAll").addEventListener("input",e=>{
-    const q=e.target.value.trim();
+    let q=e.target.value.trim();
+    
+    // Auto-replace "frat row" with the location query
+    if(q.toLowerCase() === "frat row"){
+      q = 'in:(Location) "900 Block Of 28TH ST" or "800 Block Of 28TH ST" or "700 Block Of 28TH ST" or "600 Block Of 28TH ST"';
+      e.target.value = q;
+    }
+    
     if(!q){
       filteredData=[...logsData];
       renderTable(true);
