@@ -603,7 +603,12 @@ function buildBikeTheftChart(){
   }
 
   new ApexCharts(el, {
-    chart:{ type:"line", height:320, toolbar:{show:false} },
+    chart:{ 
+      type:"line", 
+      height:320, 
+      toolbar:{show:false},
+      zoom:{ enabled:false }
+    },
     stroke:{
       curve:"smooth",
       width:3
