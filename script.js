@@ -40,6 +40,40 @@ document.querySelectorAll(".tab-button").forEach(btn => {
     document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
     btn.classList.add("active");
     document.getElementById(btn.dataset.tab).classList.add("active");
+    
+    // Clean up YoY chart legend when switching to dashboard tab
+    if (btn.dataset.tab === "dashboard") {
+      // Call the global hide function if it exists
+      if (window.hideYoYPartialSeries) {
+        setTimeout(() => {
+          window.hideYoYPartialSeries();
+        }, 50);
+        setTimeout(() => {
+          window.hideYoYPartialSeries();
+        }, 150);
+        setTimeout(() => {
+          window.hideYoYPartialSeries();
+        }, 300);
+      } else {
+        // Fallback: direct cleanup
+        setTimeout(() => {
+          const yoyContainer = document.getElementById("yoyTrendChart");
+          if (yoyContainer) {
+            const legendItems = yoyContainer.querySelectorAll('.apexcharts-legend-series');
+            legendItems.forEach((item, index) => {
+              const textContent = (item.textContent || '').toLowerCase();
+              if (textContent.includes('(partial)') || index === 1 || index === 3) {
+                item.style.setProperty('display', 'none', 'important');
+                item.style.setProperty('visibility', 'hidden', 'important');
+                item.style.setProperty('opacity', '0', 'important');
+                item.style.setProperty('width', '0', 'important');
+                item.style.setProperty('height', '0', 'important');
+              }
+            });
+          }
+        }, 150);
+      }
+    }
   });
 });
 // Utilities
@@ -225,7 +259,8 @@ function renderTable(reset=false) {
 
     if(window.innerWidth<=768){
       // Mobile card view - show all fields in a card that unfolds
-      const primaryFields=["Date Reported","Final Incident","Location"];
+      // Primary fields shown collapsed: Final Incident, Date Reported, Location
+      const primaryFields=["Final Incident","Date Reported","Location"];
       const secondaryFields=["Offense","Date From","Disposition","Event #"];
       
       // Primary fields (always visible)
@@ -429,13 +464,35 @@ function buildMostCommonChart() {
 
   // Render bar chart (no legend, distributed colors)
   container.innerHTML = "";
+  const isMobile = window.innerWidth <= 768;
   new ApexCharts(container, {
     chart: { type: "bar", height: 320, toolbar: { show: false } },
     legend: { show: false },
     plotOptions: { bar: { borderRadius: 3, columnWidth: "55%", distributed: true } },
     dataLabels: { enabled: false },
-    xaxis: { categories: labels, labels: { rotate: -30, style: { fontSize: "12px" } } },
-    yaxis: { min: 0, forceNiceScale: true, title: { text: "# of incidents (last 30 days)" } },
+    xaxis: { 
+      categories: labels, 
+      labels: { 
+        rotate: isMobile ? -45 : -30, 
+        style: { fontSize: isMobile ? "11px" : "12px" },
+        maxHeight: isMobile ? 60 : undefined
+      },
+      // More spacing on mobile
+      offsetX: isMobile ? -10 : 0,
+      offsetY: isMobile ? 10 : 0
+    },
+    yaxis: { 
+      min: 0, 
+      forceNiceScale: true, 
+      title: { 
+        text: isMobile ? "# incidents" : "# of incidents (last 30 days)",
+        offsetX: isMobile ? -10 : 0,
+        style: { fontSize: isMobile ? "11px" : "13px" }
+      },
+      labels: {
+        style: { fontSize: isMobile ? "11px" : "12px" }
+      }
+    },
     series: [{ name: "Incidents", data: counts }],
     colors
   }).render();
@@ -490,23 +547,36 @@ function buildBikeTheftChart(){
   const el = document.getElementById("bikeChart");
   el.innerHTML = "";
 
-  // Create colors array with transparent color for MTD month
-  const colors = monthlyCounts.map((count, idx) => {
-    const isMtdMonth = idx === monthlyCounts.length - 1 && isPartialMonth;
-    return isMtdMonth ? "rgba(172, 33, 36, 0.4)" : "#ac2124";
-  });
+  // For line charts, we need to split into two series if MTD is partial
+  // to show the last segment as transparent
+  let seriesData = [];
+  if (isPartialMonth && monthlyCounts.length > 1) {
+    // Split into two series: complete months + MTD month
+    // Complete data: all values except the last one (which will be null)
+    const completeData = monthlyCounts.map((val, idx) => 
+      idx === monthlyCounts.length - 1 ? null : val
+    );
+    // MTD data: nulls for all except the last two points (to connect the segment)
+    const mtdData = monthlyCounts.map((val, idx) => 
+      idx < monthlyCounts.length - 2 ? null : val
+    );
+    
+    seriesData = [
+      { name:"Thefts", data:completeData, color:"#ac2124" },
+      { name:"Thefts (MTD)", data:mtdData, color:"rgba(172, 33, 36, 0.4)" }
+    ];
+  } else {
+    seriesData = [{ name:"Thefts", data:monthlyCounts, color:"#ac2124" }];
+  }
 
   new ApexCharts(el, {
-    chart:{ type:"bar", height:320, toolbar:{show:false} },
-    plotOptions:{ 
-      bar:{ 
-        borderRadius:3, 
-        columnWidth:"55%",
-        distributed: true  // Use different colors for each bar
-      } 
+    chart:{ type:"line", height:320, toolbar:{show:false} },
+    stroke:{
+      curve:"smooth",
+      width:3
     },
-    series:[{ name:"Thefts", data:monthlyCounts }],
-    colors: colors,
+    series:seriesData.map(s => ({ name:s.name, data:s.data })),
+    colors:seriesData.map(s => s.color),
     xaxis:{
       type:"category",
       categories,
@@ -514,7 +584,11 @@ function buildBikeTheftChart(){
     },
     yaxis:{ min:0, forceNiceScale:true, title:{ text:"# of incidents" } },
     legend:{ show:false },
-    dataLabels:{ enabled:false }
+    dataLabels:{ enabled:false },
+    markers:{
+      size:4,
+      hover:{ size:6 }
+    }
   }).render();
 }
 
@@ -540,12 +614,33 @@ function buildPartiesChart(){
     `DPS shut down <span class="pct">${shutDown}</span> ${plural(shutDown,"party","parties")} and logged <span class="pct">${noise}</span> ${plural(noise,"noise complaint","noise complaints")}.`;
 
 
+  const isMobile = window.innerWidth <= 768;
   new ApexCharts(document.getElementById("partyChart"), {
     chart:{ type:"bar", height:320, toolbar:{show:false} },
     plotOptions:{ bar:{ borderRadius:3, columnWidth:"55%" } },
     dataLabels:{ enabled:false },
-    xaxis:{ categories:labels, labels:{ rotate:-15, style:{fontSize:"12px"} } },
-    yaxis:{ min:0, forceNiceScale:true, title:{ text:"# of incidents (last 30 days)" } },
+    xaxis:{ 
+      categories:labels, 
+      labels:{ 
+        rotate: isMobile ? -45 : -15, 
+        style:{ fontSize: isMobile ? "11px" : "12px" },
+        maxHeight: isMobile ? 60 : undefined
+      },
+      offsetX: isMobile ? -10 : 0,
+      offsetY: isMobile ? 10 : 0
+    },
+    yaxis:{ 
+      min:0, 
+      forceNiceScale:true, 
+      title:{ 
+        text: isMobile ? "# incidents" : "# of incidents (last 30 days)",
+        offsetX: isMobile ? -10 : 0,
+        style: { fontSize: isMobile ? "11px" : "13px" }
+      },
+      labels: {
+        style: { fontSize: isMobile ? "11px" : "12px" }
+      }
+    },
     colors:["#ac2124"],
     series:[{ name:"Incidents", data:counts }]
   }).render();
@@ -622,17 +717,30 @@ function buildYoYTrendChart() {
   lastWeekEnd.setDate(lastWeekEnd.getDate() + 6); // Add 6 days to get Sunday
   const isLastWeekComplete = latest >= lastWeekEnd;
   
-  // Format week labels - only show month start labels
-  const weekLabels = weeks.map((w, idx) => {
+  // Format week labels - only show month start labels for display
+  // But keep the actual week date strings for categories (needed for annotations)
+  const weekLabelsForDisplay = weeks.map((w, idx) => {
     const d = new Date(w);
     const prevWeek = idx > 0 ? new Date(weeks[idx - 1]) : null;
     
-    // Show label if it's the first week of the month or first week overall
-    if (idx === 0 || (prevWeek && d.getMonth() !== prevWeek.getMonth())) {
+    // Show label only if it's the first week of a month (not just the first week overall)
+    if (prevWeek && d.getMonth() !== prevWeek.getMonth()) {
       return d.toLocaleString(undefined, { month: 'short', day: 'numeric' });
+    }
+    // Also show first label if it's the 1st of the month
+    if (idx === 0 && d.getDate() <= 7) {
+      // Check if it's close to the start of the month (within first week)
+      const firstOfMonth = new Date(d.getFullYear(), d.getMonth(), 1);
+      const daysDiff = Math.abs((d - firstOfMonth) / (1000 * 60 * 60 * 24));
+      if (daysDiff <= 6) {
+        return d.toLocaleString(undefined, { month: 'short', day: 'numeric' });
+      }
     }
     return ''; // Empty string for weeks that aren't month starts
   });
+  
+  // Use actual week date strings for categories (needed for annotations to work)
+  const weekLabels = weeks;
 
   // Headline calculation (last 30 days vs same period last year)
   // Last 30 days: from (latest - 29 days) to latest (inclusive, so 30 days total)
@@ -673,93 +781,79 @@ function buildYoYTrendChart() {
       `Reported crimes are <span class="trend-word">${word}</span> <span class="pct"><span>${Math.abs(pct)}</span>%</span> compared to this time last year.`;
   }
 
-  // Highlight the most recent 4 bars (last 4 bars in the chart)
+  // Find the weeks that fall within the last 30 days
   const lastBarIdx = weeks.length - 1;
-  const currStartIdx = Math.max(0, lastBarIdx - 3); // 4 bars total: indices lastBarIdx - 3, -2, -1, lastBarIdx
-  const currIndices = [];
-  for (let i = currStartIdx; i <= lastBarIdx; i++) {
-    currIndices.push(i);
-  }
-
-  // Highlight the 4 bars from approximately one year prior (52 weeks ago)
-  // Since there are ~52 weeks in a year, go back 52 weeks from the last bar
+  const currStartIdx = Math.max(0, lastBarIdx - 3); // Last 4 bars (approximately 4 weeks = ~30 days)
+  const currEndIdx = lastBarIdx;
+  
+  // Find the weeks from approximately one year prior (52 weeks ago)
   const weeksPerYear = 52;
   const prevLastBarIdx = Math.max(0, lastBarIdx - weeksPerYear);
-  const prevStartIdx = Math.max(0, prevLastBarIdx - 3); // 4 bars total
-  const prevIndices = [];
-  for (let i = prevStartIdx; i <= prevLastBarIdx && i < weeks.length; i++) {
-    prevIndices.push(i);
-  }
+  const prevStartIdx = Math.max(0, prevLastBarIdx - 3); // 4 bars from a year ago
   
   // Create annotation ranges
+  // For stacked bar charts with category type, try using both xaxis and points annotations
   const annotations = {
-    xaxis: []
+    xaxis: [],
+    points: []
   };
   
-  // Highlight current 30-day period
-  if (currIndices.length > 0) {
-    const currStartIdx = Math.min(...currIndices);
-    const currEndIdx = Math.max(...currIndices);
-    // For category charts with numeric indices, use the index directly (0-based)
-    // ApexCharts expects indices to match the categories array position
-    const currAnnotation = {
-      x: currStartIdx,
-      x2: currEndIdx,
-      fillColor: 'rgba(172, 33, 36, 0.2)',
-      opacity: 1,
-      borderColor: 'rgba(172, 33, 36, 0.3)',
-      borderWidth: 1,
-      label: {
-        text: 'Last 30 days',
-        style: {
-          color: '#fff',
-          background: '#ac2124',
-          fontSize: '11px',
-          fontWeight: 600,
-          padding: {
-            left: 6,
-            right: 6,
-            top: 3,
-            bottom: 3
-          }
-        },
-        orientation: 'horizontal',
-        position: 'top',
-        offsetY: -5
-      }
-    };
-    annotations.xaxis.push(currAnnotation);
-  }
+  // Highlight current 30-day period (last 4 bars)
+  // Use the actual week date strings for category matching
+  const currAnnotation = {
+    x: weeks[currStartIdx],  // Use actual week date string
+    x2: weeks[currEndIdx],   // Use actual week date string
+    fillColor: 'rgba(172, 33, 36, 0.2)',
+    opacity: 0.8,
+    borderColor: 'rgba(172, 33, 36, 0.4)',
+    borderWidth: 1,
+    label: {
+      text: 'Last 30 days',
+      style: {
+        color: '#666',
+        background: 'rgba(255, 255, 255, 0.9)',
+        fontSize: '11px',
+        fontWeight: 500,
+        padding: {
+          left: 4,
+          right: 4,
+          top: 6,
+          bottom: 6
+        }
+      },
+      orientation: 'vertical',
+      position: 'top',
+      offsetY: -10
+    }
+  };
+  annotations.xaxis.push(currAnnotation);
   
   // Highlight previous year's 30-day period
-  if (prevIndices.length > 0) {
-    const prevStartIdx = Math.min(...prevIndices);
-    const prevEndIdx = Math.max(...prevIndices);
-    // For category charts with numeric indices, use the index directly (0-based)
+  if (prevLastBarIdx >= 0 && prevStartIdx < weeks.length) {
     const prevAnnotation = {
-      x: prevStartIdx,
-      x2: prevEndIdx,
-      fillColor: 'rgba(255, 204, 0, 0.2)',
-      opacity: 1,
-      borderColor: 'rgba(255, 204, 0, 0.3)',
+      x: weeks[prevStartIdx],  // Use actual week date string
+      x2: weeks[Math.min(prevLastBarIdx, weeks.length - 1)],  // Use actual week date string
+      fillColor: 'rgba(172, 33, 36, 0.15)',  // Red, slightly lighter than current period
+      opacity: 0.8,
+      borderColor: 'rgba(172, 33, 36, 0.4)',
       borderWidth: 1,
       label: {
         text: 'Same period last year',
         style: {
-          color: '#fff',
-          background: '#FFCC00',
+          color: '#666',
+          background: 'rgba(255, 255, 255, 0.9)',
           fontSize: '11px',
-          fontWeight: 600,
+          fontWeight: 500,
           padding: {
-            left: 6,
-            right: 6,
-            top: 3,
-            bottom: 3
+            left: 4,
+            right: 4,
+            top: 6,
+            bottom: 6
           }
         },
-        orientation: 'horizontal',
+        orientation: 'vertical',
         position: 'top',
-        offsetY: -5
+        offsetY: -10
       }
     };
     annotations.xaxis.push(prevAnnotation);
@@ -769,28 +863,54 @@ function buildYoYTrendChart() {
   const lastWeekIdx = weeks.length - 1;
   const isLastWeekIncomplete = !isLastWeekComplete;
   
-  const propertyDataWithColors = propertyData.map((val, idx) => {
-    if (idx === lastWeekIdx && isLastWeekIncomplete) {
-      return { x: idx, y: val, fillColor: "rgba(172, 33, 36, 0.4)" };
-    }
-    return val;
-  });
+  // For stacked bars, split into separate series if the last week is incomplete
+  // This allows us to use transparent colors for just that week
+  let propertySeries = [];
+  let violentSeries = [];
+  let chartColors = ["#ac2124", "#FFCC00"];
   
-  const violentDataWithColors = violentData.map((val, idx) => {
-    if (idx === lastWeekIdx && isLastWeekIncomplete) {
-      return { x: idx, y: val, fillColor: "rgba(255, 204, 0, 0.4)" };
-    }
-    return val;
-  });
+  // Store original data for tooltip access
+  const originalPropertyData = [...propertyData];
+  const originalViolentData = [...violentData];
+  const hasPartialSeries = isLastWeekIncomplete && propertyData.length > 0;
+  
+  if (hasPartialSeries) {
+    // Create data arrays excluding the last week
+    const propertyDataComplete = propertyData.slice(0, -1);
+    const violentDataComplete = violentData.slice(0, -1);
+    
+    // Create arrays for the last week only (with nulls before)
+    const propertyDataLastWeek = new Array(propertyData.length - 1).fill(null).concat([propertyData[lastWeekIdx]]);
+    const violentDataLastWeek = new Array(violentData.length - 1).fill(null).concat([violentData[lastWeekIdx]]);
+    
+    propertySeries = [
+      { name: "Property crimes", data: propertyDataComplete },
+      { name: "Property crimes (partial)", data: propertyDataLastWeek }
+    ];
+    violentSeries = [
+      { name: "Violent crimes", data: violentDataComplete },
+      { name: "Violent crimes (partial)", data: violentDataLastWeek }
+    ];
+    chartColors = ["#ac2124", "rgba(172, 33, 36, 0.4)", "#FFCC00", "rgba(255, 204, 0, 0.4)"];
+  } else {
+    propertySeries = [{ name: "Property crimes", data: propertyData }];
+    violentSeries = [{ name: "Violent crimes", data: violentData }];
+  }
 
   // Render stacked column chart
   container.innerHTML = "";
-  new ApexCharts(container, {
+  const chart = new ApexCharts(container, {
     chart: {
       type: "bar",
       height: 400,
       stacked: true,
-      toolbar: { show: false }
+      toolbar: { show: false },
+      events: {
+        // Disable legend click functionality
+        legendClick: function(chartContext, seriesIndex, config) {
+          return false; // Prevent default behavior
+        }
+      }
     },
     plotOptions: {
       bar: {
@@ -802,31 +922,175 @@ function buildYoYTrendChart() {
     dataLabels: { enabled: false },
     xaxis: {
       type: 'category',
-      categories: weekLabels,
-      labels: { rotate: -45, style: { fontSize: "11px" } }
+      categories: weekLabels,  // Use actual week date strings for annotations to work
+      labels: { 
+        rotate: window.innerWidth <= 768 ? -60 : -45, 
+        style: { fontSize: window.innerWidth <= 768 ? "10px" : "11px" },
+        maxHeight: window.innerWidth <= 768 ? 80 : undefined,
+        // Custom formatter to show only month start labels
+        formatter: function(value, timestamp, opts) {
+          // opts.dataPointIndex should give us the index
+          const idx = opts.dataPointIndex;
+          if (idx !== undefined && idx >= 0 && idx < weekLabelsForDisplay.length) {
+            return weekLabelsForDisplay[idx] || '';
+          }
+          // Fallback: try to parse the value as a date string
+          if (value && typeof value === 'string') {
+            const d = new Date(value);
+            if (!isNaN(d.getTime())) {
+              const weekIdx = weeks.indexOf(value);
+              if (weekIdx >= 0 && weekIdx < weekLabelsForDisplay.length) {
+                return weekLabelsForDisplay[weekIdx] || '';
+              }
+            }
+          }
+          return '';
+        }
+      },
+      offsetX: window.innerWidth <= 768 ? -10 : 0,
+      offsetY: window.innerWidth <= 768 ? 10 : 0
     },
     yaxis: {
       min: 0,
       forceNiceScale: true,
-      title: { text: "# of incidents" }
-    },
-    colors: ["#ac2124", "#FFCC00"],
-    series: [
-      { 
-        name: "Property crimes", 
-        data: propertyDataWithColors
+      title: { 
+        text: window.innerWidth <= 768 ? "# incidents" : "# of incidents",
+        offsetX: window.innerWidth <= 768 ? -10 : 0,
+        style: { fontSize: window.innerWidth <= 768 ? "11px" : "13px" }
       },
-      { 
-        name: "Violent crimes", 
-        data: violentDataWithColors
+      labels: {
+        style: { fontSize: window.innerWidth <= 768 ? "11px" : "12px" }
       }
-    ],
+    },
+    colors: chartColors,
+    series: [...propertySeries, ...violentSeries],
     legend: {
       position: "top",
-      horizontalAlign: "center"
+      horizontalAlign: "center",
+      show: true,
+      showForNullSeries: false,
+      showForZeroSeries: false,
+      // Only show the first two series (Property and Violent, excluding partial series)
+      showForSeries: hasPartialSeries ? [0, 2] : undefined,
+      formatter: function(seriesName, opts) {
+        // Hide the "(partial)" series from the legend
+        return seriesName.includes("(partial)") ? "" : seriesName;
+      }
+    },
+    tooltip: {
+      custom: function({ series, seriesIndex, dataPointIndex, w }) {
+        // Get the week date string from categories using the chart's globals
+        const weekDateStr = w.globals.categoryLabels[dataPointIndex] || weekLabels[dataPointIndex];
+        const weekDate = new Date(weekDateStr);
+        
+        // Format the week start date
+        const weekStartFormatted = weekDate.toLocaleDateString('en-US', { 
+          weekday: 'short',
+          month: 'short', 
+          day: 'numeric',
+          year: 'numeric'
+        });
+        
+        // Get property and violent crime counts from original data
+        // Use the original data arrays we stored earlier
+        const propertyCount = originalPropertyData[dataPointIndex] || 0;
+        const violentCount = originalViolentData[dataPointIndex] || 0;
+        const total = propertyCount + violentCount;
+        
+        return `
+          <div style="padding: 8px 12px; background: white; border: 1px solid #e2e8f0; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+            <div style="font-weight: 600; margin-bottom: 6px; color: #2d3748; font-size: 13px;">
+              Week of ${weekStartFormatted}
+            </div>
+            <div style="font-size: 12px; color: #4a5568;">
+              <div style="margin: 4px 0;">
+                <span style="color: #ac2124; font-weight: 600;">Property crimes:</span> 
+                <span style="font-weight: 600;">${propertyCount}</span>
+              </div>
+              <div style="margin: 4px 0;">
+                <span style="color: #FFCC00; font-weight: 600;">Violent crimes:</span> 
+                <span style="font-weight: 600;">${violentCount}</span>
+              </div>
+              <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid #e2e8f0; font-weight: 600; color: #2d3748;">
+                Total: ${total}
+              </div>
+            </div>
+          </div>
+        `;
+      }
     },
     annotations: annotations
-  }).render();
+  });
+  
+  chart.render();
+  
+  // Function to hide partial series from legend - more aggressive approach
+  const hidePartialSeries = () => {
+    if (!hasPartialSeries) return;
+    
+    const legendItems = container.querySelectorAll('.apexcharts-legend-series');
+    legendItems.forEach((item, index) => {
+      // Always disable interactivity
+      item.style.pointerEvents = 'none';
+      item.style.cursor = 'default';
+      
+      // Hide partial series by checking the text content
+      const textContent = (item.textContent || '').toLowerCase();
+      const isPartial = textContent.includes('(partial)') || textContent.trim() === '';
+      
+      // Hide by index (indices 1 and 3 are partial series)
+      if (index === 1 || index === 3 || isPartial) {
+        item.style.setProperty('display', 'none', 'important');
+        item.style.setProperty('visibility', 'hidden', 'important');
+        item.style.setProperty('opacity', '0', 'important');
+        item.style.setProperty('width', '0', 'important');
+        item.style.setProperty('height', '0', 'important');
+        item.style.setProperty('margin', '0', 'important');
+        item.style.setProperty('padding', '0', 'important');
+        item.style.setProperty('overflow', 'hidden', 'important');
+        item.style.setProperty('position', 'absolute', 'important');
+        item.style.setProperty('left', '-9999px', 'important');
+        // Also remove from DOM flow
+        item.setAttribute('aria-hidden', 'true');
+        item.setAttribute('tabindex', '-1');
+      }
+    });
+  };
+  
+  // Run immediately and on multiple intervals to catch all render cycles
+  const intervals = [50, 100, 200, 500, 1000];
+  intervals.forEach(delay => {
+    setTimeout(hidePartialSeries, delay);
+  });
+  
+  // Also hide when chart is updated
+  if (chart.events) {
+    chart.events.on('dataUpdated', hidePartialSeries);
+    chart.events.on('updated', hidePartialSeries);
+    chart.events.on('rendered', hidePartialSeries);
+  }
+  
+  // Use MutationObserver to catch when legend items are recreated
+  const observer = new MutationObserver(() => {
+    hidePartialSeries();
+  });
+  
+  // Observe the entire chart container for changes
+  setTimeout(() => {
+    if (container) {
+      observer.observe(container, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['class', 'style']
+      });
+    }
+  }, 300);
+  
+  // Store the hide function globally so it can be called from tab switches
+  if (!window.hideYoYPartialSeries) {
+    window.hideYoYPartialSeries = hidePartialSeries;
+  }
 }
 
 
