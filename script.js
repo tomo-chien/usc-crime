@@ -507,12 +507,14 @@ function buildMostCommonChart() {
       categories: labels, 
       labels: { 
         rotate: isMobile ? -45 : -30, 
-        style: { fontSize: isMobile ? "11px" : "12px" },
-        maxHeight: isMobile ? 60 : undefined
+        style: { fontSize: isMobile ? "10px" : "12px" },
+        maxHeight: isMobile ? 80 : undefined,
+        trim: false,
+        hideOverlappingLabels: false
       },
       // More spacing on mobile
-      offsetX: isMobile ? -10 : 0,
-      offsetY: isMobile ? 10 : 0
+      offsetX: isMobile ? -5 : 0,
+      offsetY: isMobile ? 15 : 0
     },
     yaxis: { 
       min: 0, 
@@ -661,11 +663,13 @@ function buildPartiesChart(){
       categories:labels, 
       labels:{ 
         rotate: isMobile ? -45 : -15, 
-        style:{ fontSize: isMobile ? "11px" : "12px" },
-        maxHeight: isMobile ? 60 : undefined
+        style:{ fontSize: isMobile ? "10px" : "12px" },
+        maxHeight: isMobile ? 80 : undefined,
+        trim: false,
+        hideOverlappingLabels: false
       },
-      offsetX: isMobile ? -10 : 0,
-      offsetY: isMobile ? 10 : 0
+      offsetX: isMobile ? -5 : 0,
+      offsetY: isMobile ? 15 : 0
     },
     yaxis:{ 
       min:0, 
