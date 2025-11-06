@@ -320,9 +320,26 @@ function renderTable(reset=false) {
 }
 
 async function loadLogs() {
-  // Add cache-busting parameter to ensure fresh data
-  const response = await fetch("data/usc_crime_logs.json?" + new Date().getTime());
-  logsData = await response.json();
+  try {
+    // Add cache-busting parameter to ensure fresh data
+    const response = await fetch("data/usc_crime_logs.json?" + new Date().getTime());
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    logsData = await response.json();
+    if (!Array.isArray(logsData)) {
+      throw new Error('Data is not an array');
+    }
+  } catch (error) {
+    console.error('Error loading logs data:', error);
+    logsData = [];
+    // Show error message to user
+    const dashboard = document.getElementById('dashboard');
+    if (dashboard) {
+      dashboard.innerHTML = '<p style="color: red; padding: 20px;">Error loading data. Please refresh the page.</p>';
+    }
+    return;
+  }
 
   // Clean whitespace
   logsData = logsData.map(d => {
