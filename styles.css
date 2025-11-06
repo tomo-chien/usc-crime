@@ -916,3 +916,26 @@ tbody tr:hover {
   pointer-events: none !important;
 }
 
+/* Footer */
+footer {
+  text-align: center;
+  padding: 20px;
+  color: #718096;
+  font-size: 11px;
+  margin-top: 40px;
+}
+
+footer p {
+  margin: 0;
+}
+
+footer a {
+  color: #718096;
+  text-decoration: none;
+}
+
+footer a:hover {
+  color: #ac2124;
+  text-decoration: underline;
+}
+
