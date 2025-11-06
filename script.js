@@ -502,7 +502,7 @@ function buildMostCommonChart() {
     chart: { 
       type: "bar", 
       height: isMobile ? 360 : 320,
-      width: isMobile ? container.offsetWidth - 16 : undefined, // Constrain width on mobile
+      width: isMobile ? container.offsetWidth - 24 : undefined, // Constrain width on mobile (account for 12px padding each side)
       toolbar: { show: false },
       offsetX: isMobile ? -4 : 0,
       offsetY: isMobile ? 0 : 0
@@ -616,7 +616,7 @@ function buildBikeTheftChart(){
     chart:{ 
       type:"line", 
       height:320,
-      width: isMobile ? el.offsetWidth - 16 : undefined, // Constrain width on mobile
+      width: isMobile ? el.offsetWidth - 24 : undefined, // Constrain width on mobile (account for 12px padding each side)
       toolbar:{show:false},
       zoom:{ enabled:false },
       offsetX: isMobile ? -4 : 0,
@@ -679,7 +679,7 @@ function buildPartiesChart(){
     chart:{ 
       type:"bar", 
       height: isMobile ? 360 : 320,
-      width: isMobile ? partyContainer.offsetWidth - 16 : undefined, // Constrain width on mobile
+      width: isMobile ? partyContainer.offsetWidth - 24 : undefined, // Constrain width on mobile (account for 12px padding each side)
       toolbar:{show:false},
       offsetX: isMobile ? -4 : 0,
       offsetY: isMobile ? 0 : 0
@@ -973,7 +973,7 @@ function buildYoYTrendChart() {
     chart: {
       type: "bar",
       height: isMobile ? 440 : 400,
-      width: isMobile ? container.offsetWidth - 16 : undefined, // Constrain width on mobile
+      width: isMobile ? container.offsetWidth - 24 : undefined, // Constrain width on mobile (account for 12px padding each side)
       stacked: true,
       toolbar: { show: false },
       offsetX: isMobile ? -4 : 0,

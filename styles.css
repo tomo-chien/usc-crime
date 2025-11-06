@@ -765,7 +765,7 @@ tbody tr:hover {
     width: 100%;
     max-width: 100%;
     margin: 20px 0 0 0;
-    padding: 12px 4px 40px 4px; /* Reduced horizontal padding to fit more content */
+    padding: 12px 12px 40px 12px; /* Balanced horizontal padding */
     border-radius: 16px;
     background: #ffffff;
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
@@ -782,8 +782,8 @@ tbody tr:hover {
   #partyChart .apexcharts-canvas {
     width: 100% !important;
     max-width: 100% !important;
-    padding-left: 4px;
-    padding-right: 4px;
+    padding-left: 0;
+    padding-right: 0;
     padding-bottom: 20px;
   }
   
