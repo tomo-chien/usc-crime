@@ -1,5 +1,4 @@
 Month,Thefts
-Feb,5
 Mar,6
 Apr,4
 May,10
@@ -10,4 +9,5 @@ Sep,10
 Oct,10
 Nov,17
 Dec,7
-Jan (MTD),3
+Jan,3
+Feb (MTD),1
